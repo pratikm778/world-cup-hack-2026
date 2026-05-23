@@ -5,6 +5,7 @@ rocketride-workshops/
 awesome-rocketride/
 gmi-python-sdk/
 ai-sdk-provider-gmicloud/
+__pycache__
 
 # Secrets
 .env
