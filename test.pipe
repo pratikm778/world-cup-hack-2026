@@ -19,7 +19,7 @@
       "input": [
         {
           "lane": "answers",
-          "from": "llm_gmi_cloud_1"
+          "from": "agent_deepagent_1"
         }
       ]
     },
@@ -54,10 +54,10 @@
         "nodeType": "default",
         "formDataValid": true
       },
-      "input": [
+      "control": [
         {
-          "lane": "questions",
-          "from": "webhook_1"
+          "classType": "llm",
+          "from": "agent_deepagent_1"
         }
       ]
     },
@@ -74,12 +74,99 @@
       },
       "ui": {
         "position": {
-          "x": 570,
-          "y": 350
+          "x": 550,
+          "y": 90
         },
         "nodeType": "default",
         "formDataValid": true
       }
+    },
+    {
+      "id": "tool_http_request_1",
+      "provider": "tool_http_request",
+      "name": "HTTP Request",
+      "config": {
+        "allowDELETE": true,
+        "allowGET": true,
+        "allowHEAD": false,
+        "allowOPTIONS": false,
+        "allowPATCH": true,
+        "allowPOST": true,
+        "allowPUT": true,
+        "maxConcurrentRequests": 5,
+        "rateLimitPerMinute": 100,
+        "rateLimitPerSecond": 10,
+        "type": "tool_http_request",
+        "urlWhitelist": [],
+        "name": "HTTP Request"
+      },
+      "ui": {
+        "position": {
+          "x": 580,
+          "y": 290
+        },
+        "nodeType": "default",
+        "formDataValid": true
+      },
+      "control": [
+        {
+          "classType": "tool",
+          "from": "agent_deepagent_1"
+        }
+      ]
+    },
+    {
+      "id": "agent_deepagent_1",
+      "provider": "agent_deepagent",
+      "name": "Deep Agent",
+      "config": {
+        "default": {
+          "advanced_mode": false
+        },
+        "name": "Deep Agent"
+      },
+      "ui": {
+        "position": {
+          "x": 730,
+          "y": 150
+        },
+        "nodeType": "default",
+        "formDataValid": true
+      },
+      "input": [
+        {
+          "lane": "questions",
+          "from": "webhook_1"
+        }
+      ]
+    },
+    {
+      "id": "tool_exa_search_1",
+      "provider": "tool_exa_search",
+      "name": "Exa Search",
+      "config": {
+        "apikey": "",
+        "includeText": true,
+        "numResults": 10,
+        "searchType": "auto",
+        "type": "tool_exa_search",
+        "useAutoprompt": true,
+        "name": "Exa Search"
+      },
+      "ui": {
+        "position": {
+          "x": 880,
+          "y": 270
+        },
+        "nodeType": "default",
+        "formDataValid": true
+      },
+      "control": [
+        {
+          "classType": "tool",
+          "from": "agent_deepagent_1"
+        }
+      ]
     }
   ],
   "project_id": "e6f8bdc9-3008-43dc-bbcc-4d200ebcab9e",
@@ -90,5 +177,5 @@
     10
   ],
   "version": 1,
-  "docRevision": 100
+  "docRevision": 125
 }
