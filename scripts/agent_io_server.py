@@ -126,15 +126,22 @@ def compute_top_movers(now_minute: float, lookback: float, k: int) -> list[dict[
 def build_tick_payload(now: datetime, last_tick: datetime | None) -> dict[str, Any]:
     """The dict POSTed to the RocketRide webhook each tick.
 
-    Window semantics: a fixed 5-min lookback (overlapping ticks see recent
-    events for free). Top-5 movers by abs(delta) keeps the payload tight;
-    the agent uses market_state_lookup for anything beyond that.
+    Window semantics: lookback = max(LOOKBACK_MIN, match-time elapsed since
+    last_tick + 0.5min safety). In RUNNING mode at speed=10 with 60s ticks,
+    that match-time gap is 10min — wider than the 5-min default, so without
+    this expansion 5 match-minutes of events would be dropped between ticks.
+    In FIXED mode the clock does not advance, so LOOKBACK_MIN is used.
     """
     now_minute = current_match_minute()
-    since_minute = max(0.0, now_minute - LOOKBACK_MIN)
+    lookback = LOOKBACK_MIN
+    if last_tick is not None and _replay["fixed_minute"] is None:
+        speed = float(os.environ.get("EDGECAST_REPLAY_SPEED", "10"))
+        elapsed_match_min = (now - last_tick).total_seconds() * speed / 60.0
+        lookback = max(LOOKBACK_MIN, elapsed_match_min + 0.5)
+    since_minute = max(0.0, now_minute - lookback)
 
     ec = events_commentary_lookup(MATCH_ID, since_minute, now_minute, "both")
-    movers = compute_top_movers(now_minute, LOOKBACK_MIN, TOP_MOVERS)
+    movers = compute_top_movers(now_minute, lookback, TOP_MOVERS)
 
     window_events = ec.get("events", [])
     previously_seen_in_window = [
@@ -151,7 +158,7 @@ def build_tick_payload(now: datetime, last_tick: datetime | None) -> dict[str, A
         "tick_ts": now.isoformat(),
         "match_minute": round(now_minute, 2),
         "since_minute": round(since_minute, 2),
-        "lookback_min": LOOKBACK_MIN,
+        "lookback_min": round(lookback, 2),
         "new_key_events": window_events,
         "new_commentary": ec.get("commentary", []),
         "polymarket_top_movers": movers,
@@ -225,12 +232,21 @@ app = FastAPI(title="EdgeCast Agent IO", lifespan=lifespan)
 
 @app.get("/health")
 def health() -> dict[str, Any]:
+    if _replay["fixed_minute"] is not None:
+        mode = "fixed"
+    elif _replay["anchor_minute"] is not None:
+        mode = "running"
+    else:
+        mode = "wall_clock"
     return {
         "ok": True,
         "match_id": MATCH_ID,
         "now_minute": round(current_match_minute(), 2),
+        "mode": mode,
+        "speed": float(os.environ.get("EDGECAST_REPLAY_SPEED", "10")),
         "kickoff": kickoff(MATCH_ID).isoformat(),
         "tick_enabled": TICK_ENABLED,
+        "tick_seconds": TICK_SECONDS,
     }
 
 
