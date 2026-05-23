@@ -49,6 +49,7 @@ def events_commentary_lookup(
             return {"error": "full events.json is market metadata, not match events; use key_events_only=True"}
         evs = [
             {
+                "id": e.get("id"),
                 "minute": round(_ke_minute(e), 2),
                 "type": e.get("type", {}).get("type"),
                 "text": e.get("text"),

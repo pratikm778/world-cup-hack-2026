@@ -19,6 +19,7 @@ import asyncio
 import json
 import logging
 import os
+from collections import deque
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Any
@@ -58,6 +59,33 @@ _replay: dict[str, float | None] = {"anchor_minute": None, "anchor_real": None, 
 _fake = os.environ.get("EDGECAST_FAKE_MINUTE")
 if _fake:
     _replay["fixed_minute"] = float(_fake)
+
+# Cross-tick memory so the stateless agent can dedup. The webhook POST in
+# tick_loop returns the agent's broadcast, which we capture into
+# _broadcast_history and surface back on the next tick as `prior_broadcasts`.
+# `_seen_event_ids` accumulates every key_event id we have ever shown the
+# agent, so it can tell new events apart from repeats inside the 5-min window.
+BROADCAST_HISTORY_MAX = int(os.environ.get("EDGECAST_BROADCAST_HISTORY", "10"))
+_broadcast_history: deque[dict[str, Any]] = deque(maxlen=BROADCAST_HISTORY_MAX)
+_seen_event_ids: set[str] = set()
+
+
+def _extract_broadcast(body: Any) -> str:
+    """Pull the agent's broadcast text out of the RocketRide webhook response.
+    Defensive — response shape can be a string, list, or {answers: ...} dict."""
+    if body is None:
+        return ""
+    if isinstance(body, str):
+        return body.strip()
+    if isinstance(body, list):
+        return " ".join(s for s in (_extract_broadcast(x) for x in body) if s).strip()
+    if isinstance(body, dict):
+        if "answers" in body:
+            return _extract_broadcast(body["answers"])
+        for k in ("text", "content", "output", "message"):
+            if k in body:
+                return _extract_broadcast(body[k])
+    return ""
 
 
 def current_match_minute() -> float:
@@ -108,20 +136,33 @@ def build_tick_payload(now: datetime, last_tick: datetime | None) -> dict[str, A
     ec = events_commentary_lookup(MATCH_ID, since_minute, now_minute, "both")
     movers = compute_top_movers(now_minute, LOOKBACK_MIN, TOP_MOVERS)
 
+    window_events = ec.get("events", [])
+    previously_seen_in_window = [
+        e["id"] for e in window_events if e.get("id") and e["id"] in _seen_event_ids
+    ]
+    # Anything we have not handed to the agent before is fresh. Mark and forget
+    # at payload-build time so dedup is decided once per tick, not per call.
+    for e in window_events:
+        if e.get("id"):
+            _seen_event_ids.add(e["id"])
+
     return {
         "match_id": MATCH_ID,
         "tick_ts": now.isoformat(),
         "match_minute": round(now_minute, 2),
         "since_minute": round(since_minute, 2),
         "lookback_min": LOOKBACK_MIN,
-        "new_key_events": ec.get("events", []),
+        "new_key_events": window_events,
         "new_commentary": ec.get("commentary", []),
         "polymarket_top_movers": movers,
+        "previously_seen_key_event_ids": previously_seen_in_window,
+        "prior_broadcasts": list(_broadcast_history),
         "hint": (
             "You are EdgeCast. If anything above is broadcast-worthy "
             "(a goal, card, significant market move, ≥5c delta), produce ONE "
             "trader-terse alert. Otherwise return an empty string. Use the "
-            "lookup tools for deeper context only if needed."
+            "lookup tools for deeper context only if needed. Dedup against "
+            "previously_seen_key_event_ids and prior_broadcasts."
         ),
     }
 
@@ -138,6 +179,20 @@ async def tick_loop() -> None:
                          len(payload["new_key_events"]), len(payload["new_commentary"]))
                 r = await client.post(WEBHOOK_URL, json=payload)
                 log.info("webhook %s %s", r.status_code, r.text[:120] if r.text else "")
+                if r.status_code < 300 and r.text:
+                    try:
+                        broadcast_text = _extract_broadcast(r.json())
+                    except (json.JSONDecodeError, ValueError):
+                        broadcast_text = r.text.strip()
+                    if broadcast_text:
+                        top = payload["polymarket_top_movers"]
+                        _broadcast_history.append({
+                            "tick_ts": payload["tick_ts"],
+                            "match_minute": payload["match_minute"],
+                            "text": broadcast_text,
+                            "top_market_id": top[0]["market_id"] if top else None,
+                        })
+                        log.info("broadcast captured (%d in history)", len(_broadcast_history))
                 last_tick = now
             except httpx.RequestError as e:
                 log.warning("tick post failed (will retry): %s", e)
@@ -203,12 +258,19 @@ def events_window(
     return events_commentary_lookup(MATCH_ID, start_min, end_min, kind, key_only)  # type: ignore[arg-type]
 
 
+def _reset_memory() -> None:
+    """Clear cross-tick memory so a fresh replay does not see stale dedup state."""
+    _broadcast_history.clear()
+    _seen_event_ids.clear()
+
+
 @app.post("/replay/seek")
 def replay_seek(minute: float = Query(...)) -> dict[str, Any]:
     """Pin the current match-minute. Useful for tests & demos."""
     _replay["fixed_minute"] = minute
     _replay["anchor_minute"] = None
     _replay["anchor_real"] = None
+    _reset_memory()
     return {"now_minute": minute, "mode": "fixed"}
 
 
@@ -218,7 +280,17 @@ def replay_start(from_minute: float = Query(0.0)) -> dict[str, Any]:
     _replay["anchor_minute"] = from_minute
     _replay["anchor_real"] = datetime.now(timezone.utc).timestamp()
     _replay["fixed_minute"] = None
+    _reset_memory()
     return {"anchored_minute": from_minute, "mode": "running"}
+
+
+@app.get("/agent/memory")
+def agent_memory() -> dict[str, Any]:
+    """Inspect cross-tick memory — useful for debugging dedup behavior."""
+    return {
+        "broadcast_history": list(_broadcast_history),
+        "seen_event_count": len(_seen_event_ids),
+    }
 
 
 @app.get("/markets")
