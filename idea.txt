@@ -1,0 +1,376 @@
+assume a match - I have the live stream of commentary (simulated) simulated live odds (historic replay of all polymarket data), lets draft a clear ahckathon pitch, the main features to build
+
+1:15 PM
+Here's a clean draft. I'll give you the pitch, the feature list with cut-lines, the architecture, and a demo script — all sharp enough to use directly or remix.
+
+Pitch (60 seconds)
+Name candidates: EdgeCast, PitchSide, LineWatch, NinetyMinute. Pick one early; everything else gets easier when you can name your product. I'll use EdgeCast below.
+
+The pitch:
+
+Polymarket has 200+ live markets during a single World Cup match — match winner, next goal scorer, exact score, corners, cards, half-time leader, minute of first goal. No human can watch all of them. Most bettors stare at one market and miss the moves on the other 199.
+
+EdgeCast is a live betting copilot. It watches every market on the board, listens to the match commentary, and tells you in real time which markets are moving, which are about to move, and what to do about your open positions. It runs the analysis a sharp human would run on every market simultaneously, every minute of the match.
+
+Today we're going to replay the final 25 minutes of Argentina-France 2022 — actual events, actual historical Polymarket data — and show you what EdgeCast would have told you, second by second, as it happened.
+
+That's the framing. Don't oversell it as "AI predicts outcomes" — sell it as "AI keeps up with what a human couldn't."
+
+Core features (build these, in this order)
+1. Replay engine (foundation, build first — 4 hours)
+Two synchronized streams playing back at configurable speed (1x for demo realism, 4x for development/testing):
+
+Commentary stream: minute-by-minute match commentary as text chunks. Use a real match's commentary scraped from BBC/ESPN/Wikipedia minute-by-minute, augmented with Gemini-generated texture where it's thin.
+Market data stream: time-synced snapshots of Polymarket prices for every market in that match, at 1-minute fidelity (pulled in advance via /prices-history and stored locally).
+A "minute clock" UI element ticks visibly. Both streams advance together. This is the spine of the demo — if this is brittle, everything else is brittle.
+
+2. Event classifier (the "fast hot path" — 4 hours)
+A small fine-tuned model on GMI Cloud that takes each commentary chunk and emits a structured event:
+
+{type: "goal" | "shot_on_target" | "shot_off_target" | "yellow_card" | 
+       "red_card" | "substitution" | "corner" | "free_kick_danger" | 
+       "save" | "injury" | "momentum_shift" | "vac",
+ player: "Mbappé", team: "France", minute: 80, confidence: 0.94}
+For the hackathon, you can absolutely skip fine-tuning and use Gemini Flash with a structured-output prompt — but the narrative of "we use GMI for the hot path because Gemini Flash is too slow/expensive at this rate" is your architectural story. Decide based on time: if you have 6 hours to spare, fine-tune a small model on GMI; otherwise use Flash and lie a little in the pitch about the production architecture.
+
+3. Market relevance engine (the core feature — 6 hours)
+This is the actual product. When an event fires, identify which of the 200 markets are most affected. Two-stage:
+
+Semantic match: vector search over market titles + descriptions to find candidates relevant to the event ("red card to French defender" → "France wins," "Argentina wins," "next goal scorer," "total goals over 2.5," "cards over 4.5," etc.)
+Price velocity check: cross-reference candidates against actual price movement in the last N minutes — markets that moved more get ranked higher.
+Output: ranked list of 3-5 markets with movement %, current price, and a 1-line agent explanation.
+
+This is the RocketRide showpiece: event → fan-out to embedding lookup + price velocity calc → ranker → Gemini synthesis. Pipeline graph judges can literally see.
+
+4. Chat agent (the user-facing voice — 4 hours)
+Gemini-powered chat panel that:
+
+Auto-posts agent observations as they fire ("80': Mbappé equalizer. 'France wins' jumped from 28c to 41c. 'Goes to extra time' moved 19→34c — still room if you believe it.")
+Accepts user questions ("why is the corners market not moving?" / "should I cash out my Argentina position?")
+Has access to the full event history + current market state + user's open positions when answering
+Keep this conversational and short. No paragraphs. Sharp, trader-style messages.
+
+5. Position tracker (sidebar — 3 hours)
+User clicks a "I bet on X" button next to any market. It appears in a "My Positions" sidebar section showing entry price, current price, P&L. Agent occasionally chimes in with hedge/cashout suggestions when a position's market moves materially.
+
+Keep this tiny. One feature: track positions, surface relevant agent commentary. No order entry, no portfolio analytics, no allocation logic. Resist the urge.
+
+6. UI layout (3 hours)
+Three panes:
+
+Left (40%): chat feed + input box. Agent messages with color-coded urgency (yellow = movement, red = big movement, blue = informational, green = your-position update).
+Center (35%): video clip playing muted on loop (pure visual anchor, no AI processing) + the minute clock prominently displayed beneath it + scrolling commentary text below the video.
+Right (25%): market sidebar. Top section: "Hot Markets" — the 5 most-moved in the last 2 minutes, glowing yellow when fresh. Bottom section: "My Positions" — the user's tracked bets.
+Cut lines (cut in this order if running short)
+Cut position tracker entirely → demo focuses purely on market discovery
+Cut chat input (keep only auto-posted messages) → fully autonomous agent narrative
+Cut velocity ranking → semantic-only relevance
+Cut event types down to 5 → goal, card, sub, shot_on_target, momentum_shift only
+Architecture (one slide)
+                    REPLAY ENGINE (time-synced)
+                           │
+              ┌────────────┴────────────┐
+              ▼                         ▼
+       Commentary stream         Market data stream
+              │                         │
+              ▼                         │
+    [GMI: Event Classifier]             │
+              │                         │
+              ▼                         │
+    ┌──────── RocketRide Pipeline ──────┤
+    │                                   │
+    │  Event → Semantic search ──┐      │
+    │              over markets  │      │
+    │                            ▼      │
+    │              Price velocity calc ◄─┤
+    │                            │      │
+    │                            ▼      │
+    │                    Ranker  │      │
+    │                            ▼      │
+    │              [Gemini: explanation synthesis]
+    │                            │      │
+    └────────────────────────────┼──────┘
+                                 ▼
+                          UI: chat + sidebar
+                                 ▲
+                                 │
+                          User questions ──► [Gemini chat with full context]
+                          User positions ──► tracked locally
+Tool justification (the story you tell judges):
+
+RocketRide: orchestrates the multi-pipeline fan-out. "We had to run 4 things in parallel on every event with type-safe data flow — RocketRide's visual pipeline graph let us iterate on the logic without rewriting boilerplate."
+Gemini AI Studio: the natural-language brain. Synthesis ("turn these 6 facts into one sentence"), chat ("answer the user with full game and position context"), and structured output for events if you skip the fine-tuned model.
+GMI Cloud: the hot-path inference. "Event classification runs on every commentary chunk; Gemini Flash works but at scale it's expensive. Our small fine-tuned classifier on GMI is 10x cheaper and 5x faster."
+If the GMI story is too aspirational by demo time, swap it for: "we use GMI for the embedding model that powers semantic market lookup — runs locally on our GPU instance, no per-call cost as we scan markets every minute." That's also true and easier to ship.
+
+Demo script (90 seconds — practice this exactly)
+[0:00–0:10] Frame the problem
+
+"During Argentina-France 2022, Polymarket had over 180 active markets. We pulled actual historical price data for all of them. We're going to replay the final 25 minutes."
+
+[0:10–0:25] Show the calm state
+
+"Match is 75 minutes in. Argentina leads 2-1. Our agent is watching every market. Right now nothing's moving — sidebar is quiet. Chat shows the agent's last observation: 'France pushing forward, expect movement in corners and shots markets.'"
+
+[Press play. Let the clock tick from 76' through 79'.]
+
+[0:25–0:55] The Mbappé equalizer moment
+
+"80th minute — Mbappé scores. Watch the sidebar."
+
+[Agent posts: "GOAL FRA — Mbappé. Match Winner: France 28→41c, Argentina 64→48c. Goes to Extra Time: 19→34c. Total Goals Over 3.5: 22→35c."]
+
+"Three markets light up in under 2 seconds. The actual market took roughly 90 seconds to fully reprice. Click 'why' on 'Goes to Extra Time' —"
+
+[Click "why?" — panel opens showing the pipeline trace: event classification → markets considered → ranking logic → final explanation.]
+
+"— and you see the trace. Event classified as 'goal, France, 80th minute.' Relevance engine pulled 12 markets, ranked by sensitivity to late equalizers based on price velocity. Gemini synthesized the recommendation."
+
+[0:55–1:15] Show the chat interaction
+
+[Type into chat: "I have a position on Argentina wins at 64c. Should I cash out?"]
+
+[Agent responds with context-aware answer using position data.]
+
+[1:15–1:30] Close
+
+"EdgeCast is doing this for every event, on every market, for the whole match. A human can watch one market well. Our agent watches 180. That's the product."
+
+Pre-demo prep checklist (do these the night before)
+Pick the exact 25-minute window with the most price action. Mark the timestamp of the key event you'll click into.
+Pre-load and verify all Polymarket data for the match. Don't depend on the API during the demo. Local JSON files.
+Pre-write at least 3 chat questions that you know give good answers. Practice typing them.
+Pre-test the "why?" panel for the specific event you'll click. If the pipeline trace looks ugly, clean it up.
+Record a backup video walkthrough. If anything dies live, you pivot to "here's a recording from earlier."
+Have a "panic match-state" you can jump to if early minutes are boring — a hotkey that skips to the dramatic moment.
+Two things I'd push back on if I were your teammate
+Don't try to demo from minute 0. Start at 75'. Nobody wants to watch 75 minutes of calm to get to the drama. Even with replay speed-up, the demo should open on a moment 5 minutes before the dramatic event so judges feel the buildup, see the calm, then experience the spike. That contrast is the entire emotional arc.
+
+Don't claim the agent "predicts" outcomes. Claim it "keeps up with the market." This is more honest, harder to attack, and the actual product. "We're faster than human attention" is a winning claim. "We're smarter than the market" is a losing one — markets are pretty smart, and a judge with finance background will sink you in Q&A.
+
+Want me to draft the actual RocketRide pipeline JSON, the event taxonomy in detail, or the specific Polymarket markets you'd want to pre-pull for the Argentina-France match?
+
+lets refine the core features, are we looking at chat or something else and are we giving periodic updates or are we answering bet questions or what all ? monitoring roeviosu ebts etcetc. core offering for user lets refine that
+
+1:18 PM
+Good instinct to refine this — the "what does the user actually do with this thing" question is the most under-specified part of your idea right now, and it'll determine whether the demo lands.
+
+Let me lay out the choices, then make a recommendation.
+
+The fundamental tension
+You're trying to combine three different product modes, and they pull in different directions:
+
+Mode A — Autonomous broadcaster: Agent talks, you watch. Like a Bloomberg ticker or a sports broadcast. You don't interact much; you absorb. Demo strength: high (judges watch agent reacting live). Demo weakness: feels passive, "where's the AI?" critique.
+
+Mode B — Conversational analyst: You ask, agent answers. Like ChatGPT for betting. Demo strength: showcases reasoning depth. Demo weakness: judges have to watch you type, demo feels slow, every question is a chance for the model to say something dumb.
+
+Mode C — Personal portfolio manager: Agent watches your positions specifically and advises. Demo strength: emotionally resonant ("the AI saved me money"). Demo weakness: requires a lot of fake setup, and the "manager" framing invites regulatory/ethical questions you don't want.
+
+Most hackathon teams try to do all three and end up with three mediocre features. Pick one as primary, use one as secondary, cut the third.
+
+My strong recommendation: Mode A primary, Mode B secondary, cut Mode C
+Here's why, then I'll lay out what that means concretely.
+
+Mode A (broadcaster) as primary because it's what no other product does well. Sportsbooks have odds. ChatGPT can answer questions. Nobody has an agent that watches everything for you and surfaces what matters. That's your differentiated wedge. And it's the most visually compelling — judges see the sidebar light up, see the chat fire alerts, feel the agent's pace.
+
+Mode B (chat) as a "lean-in" feature — the user can interrupt the broadcast to ask follow-up questions, but the product works without it. This protects the demo: if your chat fails, the broadcast keeps going. If chat works, it's an "and also we have this" moment.
+
+Cut Mode C (position tracking) for the demo, but keep the language. The pitch can mention "tracks your positions" as a roadmap item; the demo doesn't show it. This saves you ~6 hours of building a fake portfolio UI that distracts from the core.
+
+What that means concretely — the refined core offering
+The user experience in one sentence: "It's a live trading desk for a match. The agent narrates what's worth watching; you can interrupt to ask why."
+
+Primary loop: the broadcast
+The agent produces three kinds of messages, each visually distinct:
+
+Movement alerts (~every 30-90 seconds, frequency varies with match activity). "82' — Corners Over 9.5 jumped 18→27c on France's third corner in 4 minutes. Pressure mounting." These are the bread and butter — they show the agent is watching things you'd miss.
+Pre-event flags (rare but important — these are your wow moments). "78' — Argentina's high line + Mbappé's pace = mismatch building. 'Next goal: France' at 35c looks low given the last 4 minutes of territory." This is the "agent saw it coming" pitch. Hardest to build well, highest payoff.
+State summaries (every 5-10 minutes, slow tempo). "85' Status: France equalizer reshuffled the board. Top 3 movers: extra time, total goals, France winner. Quietest markets: half-time leader (resolved), exact score." Gives the user a periodic "what's happening" without scrolling.
+That's the broadcast. Three message types, distinct visual treatment, paced to feel alive but not spammy. That's the entire core feature.
+
+Secondary loop: ask-the-agent
+A chat input at the bottom of the broadcast. User can type questions, agent answers using full context (match state, all market prices, recent events, recent alerts).
+
+What it's good for:
+
+"Why did you flag the corners market?"
+"What markets haven't moved that probably should?"
+"If France equalizes, which markets move most?"
+"Explain the price gap between Argentina win and France win — shouldn't it be tighter?"
+What it's not for:
+
+"Place a bet for me" (don't go there)
+"What will happen next?" (don't promise prediction)
+Long open-ended conversations (one-shot Q&A only)
+Keep the design tight: chat is for interrogating the broadcast, not replacing it.
+
+What I'd cut from your earlier list
+Position tracking sidebar — cut. Add a single sentence in the pitch: "Production tracks your open positions and alerts on hedge opportunities." Don't build it.
+"Should I cash out" suggestions — cut. Conflates the agent's job with portfolio advice. Same roadmap mention.
+Bet placement / order entry — cut. Polymarket is real money; you don't want any UI suggesting actual order entry. This actively hurts the pitch because it raises liability questions.
+What the user actually does during the demo
+This is the test of any product spec — can you describe the user's behavior in 30 seconds?
+
+The user opens EdgeCast at the start of the match. They glance at the screen periodically while watching the actual match elsewhere. The broadcast fires alerts; when something catches their eye, they read the explanation. If they want more depth on a particular call, they type a question. Otherwise they just watch the alerts roll in. When the match ends, they've absorbed a sharper picture of which markets moved and why than they would have from watching alone.
+
+That's the offering. It's not "AI bets for you." It's not "ChatGPT for sports betting." It's "a market-aware co-watcher."
+
+The refined feature list (replaces what's in your earlier draft)
+Replay engine — same as before, this is the spine.
+Event classifier — same as before.
+The Broadcast (replaces "market relevance engine" + "chat agent" as separate features). One unified feature with three message types: movement alerts, pre-event flags, state summaries. Pacing logic is part of this — don't fire more than one message every ~20 seconds, prioritize by importance.
+Ask-the-agent (chat input as secondary). Single-turn Q&A with full context.
+Hot Markets sidebar — visual reinforcement of what the broadcast says, top 5 movers always visible.
+Five features. Buildable. Each one demoable in under 15 seconds.
+
+One more thing worth deciding now: tone of the broadcast
+This actually matters more than people think. Three options:
+
+Trader-terse: "82' Corners O9.5: 18→27c. Pressure +ve." Sharp, fast, sounds professional. Fits the "live trading desk" framing. Hardest to write well — needs consistent style.
+Analyst-conversational: "Corners market is heating up — France just won their third corner in four minutes, and the over 9.5 line jumped from 18 to 27 cents." More accessible, easier to write, slightly slower feel.
+Color-commentator: "France piling on the pressure! Corner count is climbing fast and the market noticed — over 9.5 is suddenly live." Most fun but risks sounding gimmicky and harder to keep useful.
+I'd pick trader-terse with a sentence of context as the default. Looks like Bloomberg, reads like English: "82' — Corners O9.5: 18→27c. France's third corner in 4 minutes; pressure mounting." That's two lines per alert, scannable, sharp.
+
+Want me to draft next:
+The exact taxonomy of alert types with templates for each
+The specific Polymarket markets to pre-pull for Argentina-France 2022
+The RocketRide pipeline graph as a .pipe-style JSON
+The Gemini system prompt for the broadcaster
+Pick what's most useful — I'd suggest the alert taxonomy + templates next because that's the thing that'll define whether the broadcast feels sharp or generic.
+
+
+================================================================================
+REFINED SCOPE — 1:30 PM (locked, pre-PRD)
+================================================================================
+
+TIME MATH
+- Now: ~1:30 PM. Submission: 5:00 PM. = 3.5 hours wall-clock.
+- Team: pratikm778 + sajayv98 = 2 people. = ~7 person-hours of build.
+- Demo: 5:10 PM, 3 min + 2 min Q&A.
+- The prior 24-hour feature plan does not fit. Everything below is sized to fit.
+
+PRODUCT NAME (placeholder, decide in first 10 min)
+- Suggested: EdgeCast. Memorable, generic, no trademark issues.
+- Tagline: "A market-aware co-watcher for live sports markets."
+
+DECISIONS LOCKED IN
+- Data: scripted simulation. Fake 10-min match timeline, 5-8 events, 8-12 markets.
+  No scraping, no Polymarket API. All seed data lives in /demo-data/*.json.
+- Demo execution: LIVE Gemini calls for the broadcast (real inference triggered
+  by scripted events), with 5s hard timeout + per-event fallback template.
+  Live chat Q&A too (with safety rails — see "Chat scope" below).
+- Pre-event flags: CUT. Agent reacts only. No prediction language anywhere.
+- Brand framing: GENERIC sports markets. Never name Polymarket in pitch/UI/code.
+  Markets are styled like prediction markets (cents, "Yes"/"No", price moves).
+
+THE STACK (locked)
+- Frontend: Vite + React (workshop scaffold).
+- Backend: FastAPI (workshop scaffold).
+- Agent runtime: RocketRide, ONE pipeline:
+    chat_source → agent_rocketride → llm_gmicloud (google/gemini-3-flash-preview)
+                                    └── tool_python (lookup market by event)
+                                    └── memory_internal
+- LLM provider: GMI Cloud's shared-tier `google/gemini-3-flash-preview`.
+  Ticks GMI Cloud + Google requirements in a single call. No separate Gemini API.
+- Data: static JSON files. No DB. No vector store. No embeddings.
+
+WHAT WE'RE BUILDING (MVP — 5 items, sized)
+
+  1. Seed data files (30 min, 1 person)
+     - /demo-data/match.json — 10-minute timeline, 5-8 events with timestamps
+     - /demo-data/markets.json — 8-12 markets, each with name + opening price
+     - /demo-data/price-curves.json — per-market, per-minute price points
+     - /demo-data/commentary.json — minute-by-minute text snippets
+
+  2. Replay engine (1.5 hr, 1 person — TRACK A)
+     - Python ticker that advances the clock every N seconds (configurable)
+     - On each tick: emits commentary snippet + updates current market prices
+     - Exposes /api/state (current minute, all market prices, last 3 events)
+     - Exposes /api/events SSE stream — events fire as the clock hits their timestamp
+
+  3. The Broadcast pipeline (1.5 hr, 1 person — TRACK B)
+     - RocketRide .pipe: chat_source → agent_rocketride → llm_gmicloud
+     - On each event, FastAPI POSTs the event + market snapshot to the pipe
+     - Agent emits ONE structured message: {type, urgency, text, markets_cited[]}
+     - Two message types only: "movement_alert" and "state_summary"
+        - movement_alert: fires on every scripted event, ≤2 lines
+        - state_summary: fires every 3 minutes of match time, ≤3 lines
+     - Tone: trader-terse with a sentence of context (locked from earlier draft)
+
+  4. UI — three panes (2 hr, 1 person — TRACK A continues)
+     - LEFT 40%: chat feed (broadcast messages + user Q&A interleaved) + input box
+     - CENTER 35%: minute clock + scrolling commentary text. No video this round.
+     - RIGHT 25%: "Hot Markets" sidebar — top 5 by absolute price movement in last
+                 2 min, glowing yellow when fresh (CSS animation on update)
+     - Color-coded urgency on broadcast messages (yellow / red / blue)
+
+  5. Demo polish + script rehearsal (1 hr, both)
+     - Fixed start at minute 75' equivalent of the simulated match
+     - Verify timing of each event hits cleanly
+     - 3 pre-written chat questions both teammates can type from muscle memory
+     - Backup video walkthrough recorded as fallback
+
+  Person-hour total: 0.5 + 1.5 + 1.5 + 2 + 1 = 6.5 person-hours. Buffer = 0.5 hr.
+
+WHAT WE ARE NOT BUILDING (explicit cut list — refer back here when tempted)
+- Position tracking / "My Positions" sidebar — cut
+- "I bet on X" buttons / order entry / cash-out suggestions — cut
+- Pre-event flags / "agent saw it coming" — cut
+- Fine-tuned classifier on GMI — cut (Gemini Flash via GMI does it all)
+- Vector search / embeddings / Pinecone-style market lookup — cut
+- Price velocity ranker — cut (use a 10-line Python sort by abs(price delta))
+- Real Polymarket data / any web scraping — cut
+- Multi-match support — single hardcoded match
+- User accounts / persistence — none, everything in-memory
+- "Why?" trace panel with pipeline visualization — cut (the RocketRide canvas
+  open in VS Code during the demo IS the trace panel — show it once)
+- Mobile responsive / dark mode polish — cut, desktop fixed layout only
+
+CHAT Q&A SCOPE (the live-risk pane)
+- Single-turn, no history retention beyond the current match state
+- System prompt includes: match state, all market prices, last 5 events, last 5
+  broadcast messages
+- Hard token limit: 200 output tokens (keeps responses sharp, faster, cheaper)
+- Refusal categories baked into prompt:
+   - "Place a bet" → "EdgeCast doesn't take orders, only watches markets."
+   - "What will happen next" → "I can't predict; I can show you what's moving."
+- The 3 rehearsed questions (all known-good outputs):
+   - "Why is the corners market moving?"
+   - "Which markets haven't moved that probably should?"
+   - "Walk me through the last big event."
+
+DEMO FLOW (90 seconds, locked)
+- [0:00-0:10] Frame: "Sports betting markets move fast. A human can watch one
+  market at a time. We watch every market and tell you what matters."
+- [0:10-0:30] Show calm: minute 76, sidebar quiet, last broadcast: "France
+  pushing forward, expect movement in corners/shots."
+- [0:30-1:10] Press play. Goal event fires at minute 80. Sidebar lights up,
+  3 alerts roll into chat. Show RocketRide VS Code canvas briefly: "this is the
+  agent that just ran."
+- [1:10-1:40] Type live: "Why is corners moving?" — Gemini answers in <5s.
+- [1:40-1:50] Close: "Today, one match. Tomorrow, any match, any sport,
+  any prediction market. That's the product."
+
+GUARDRAILS FOR LIVE GEMINI (the chosen risk)
+- All Gemini calls have 5s hard timeout
+- Per-event fallback template: "{minute}' — {event_summary}. Markets to watch:
+  {top_3_by_velocity}." (deterministic, no LLM)
+- Gemini system prompts written + tested before 3:30 PM. No prompt edits after.
+- Demo network: hotspot backup ready in case venue wifi is bad
+- One full rehearsal at 4:30 PM, end-to-end, no edits after
+
+TRACK ASSIGNMENT (parallelizable from minute one)
+- TRACK A (UI + replay):     seed data → replay engine → three-pane UI
+- TRACK B (agent + pipeline): RocketRide .pipe → FastAPI POST endpoint →
+                              system prompts → fallback templates
+
+OPEN QUESTIONS STILL TO LOCK BEFORE PRD
+- Who takes Track A vs Track B? (assume pratikm778 = B, sajayv98 = A unless
+  said otherwise)
+- Exact match scenario: scripted around a known dramatic arc (e.g. equalizer at
+  80', winner at 90'+) or something less canonical?
+- Final product name: EdgeCast or something else?
+- Are we using the workshop coding-agent solution as our actual scaffold, or
+  starting clean from `pnpm create vite` + `pip install fastapi`?
+
+================================================================================

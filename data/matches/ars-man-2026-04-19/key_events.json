@@ -1,0 +1,800 @@
+[
+  {
+    "id": "47499913",
+    "type": {
+      "id": "80",
+      "text": "Kickoff",
+      "type": "kickoff"
+    },
+    "text": "First Half begins.",
+    "period": {
+      "number": 1
+    },
+    "clock": {
+      "value": 0.0,
+      "displayValue": ""
+    },
+    "scoringPlay": false,
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T15:30:49Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.0,
+    "fieldPositionY": 0.0,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.0
+  },
+  {
+    "id": "47500155",
+    "type": {
+      "id": "70",
+      "text": "Goal",
+      "type": "goal"
+    },
+    "text": "Goal! Manchester City 1, Arsenal 0. Rayan Cherki (Manchester City) right footed shot from the centre of the box to the bottom left corner. Assisted by Matheus Nunes.",
+    "shortText": "Rayan Cherki Goal",
+    "period": {
+      "number": 1
+    },
+    "clock": {
+      "value": 926.0,
+      "displayValue": "16'"
+    },
+    "scoringPlay": true,
+    "team": {
+      "id": "382",
+      "displayName": "Manchester City"
+    },
+    "participants": [
+      {
+        "athlete": {
+          "id": "298008",
+          "displayName": "Rayan Cherki"
+        }
+      },
+      {
+        "athlete": {
+          "id": "303785",
+          "displayName": "Matheus Nunes"
+        }
+      }
+    ],
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T15:46:15Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.19,
+    "fieldPositionY": 0.579,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.458
+  },
+  {
+    "id": "47500191",
+    "type": {
+      "id": "70",
+      "text": "Goal",
+      "type": "goal"
+    },
+    "text": "Goal! Manchester City 1, Arsenal 1. Kai Havertz (Arsenal) right footed shot from the left side of the six yard box to the centre of the goal.",
+    "shortText": "Kai Havertz Goal",
+    "period": {
+      "number": 1
+    },
+    "clock": {
+      "value": 1033.0,
+      "displayValue": "18'"
+    },
+    "scoringPlay": true,
+    "team": {
+      "id": "359",
+      "displayName": "Arsenal"
+    },
+    "participants": [
+      {
+        "athlete": {
+          "id": "231182",
+          "displayName": "Kai Havertz"
+        }
+      }
+    ],
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T15:48:03Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.042,
+    "fieldPositionY": 0.401,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.484
+  },
+  {
+    "id": "47500493",
+    "type": {
+      "id": "94",
+      "text": "Yellow Card",
+      "type": "yellow-card"
+    },
+    "text": "Cristhian Mosquera (Arsenal) is shown the yellow card.",
+    "shortText": "Cristhian Mosquera Yellow Card",
+    "period": {
+      "number": 1
+    },
+    "clock": {
+      "value": 2138.0,
+      "displayValue": "36'"
+    },
+    "scoringPlay": false,
+    "team": {
+      "id": "359",
+      "displayName": "Arsenal"
+    },
+    "participants": [
+      {
+        "athlete": {
+          "id": "328497",
+          "displayName": "Cristhian Mosquera"
+        }
+      }
+    ],
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T16:06:27Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.0,
+    "fieldPositionY": 0.0,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.0
+  },
+  {
+    "id": "47500603",
+    "type": {
+      "id": "81",
+      "text": "Halftime",
+      "type": "halftime"
+    },
+    "text": "First Half ends, Manchester City 1, Arsenal 1.",
+    "period": {
+      "number": 1
+    },
+    "clock": {
+      "value": 2700.0,
+      "displayValue": "45'+2'"
+    },
+    "scoringPlay": false,
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T16:16:51Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.0,
+    "fieldPositionY": 0.0,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.0
+  },
+  {
+    "id": "47500785",
+    "type": {
+      "id": "76",
+      "text": "Substitution",
+      "type": "substitution"
+    },
+    "text": "Substitution, Arsenal. Gabriel Martinelli replaces Noni Madueke.",
+    "shortText": "Gabriel Martinelli Substitution",
+    "period": {
+      "number": 2
+    },
+    "clock": {
+      "value": 2700.0,
+      "displayValue": "45'"
+    },
+    "scoringPlay": false,
+    "team": {
+      "id": "359",
+      "displayName": "Arsenal"
+    },
+    "participants": [
+      {
+        "athlete": {
+          "id": "269844",
+          "displayName": "Gabriel Martinelli"
+        }
+      },
+      {
+        "athlete": {
+          "id": "293236",
+          "displayName": "Noni Madueke"
+        }
+      }
+    ],
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T16:32:17Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.0,
+    "fieldPositionY": 0.0,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.0
+  },
+  {
+    "id": "47500795",
+    "type": {
+      "id": "82",
+      "text": "Start 2nd Half",
+      "type": "start-2nd-half"
+    },
+    "period": {
+      "number": 2
+    },
+    "clock": {
+      "value": 2700.0,
+      "displayValue": "45'"
+    },
+    "scoringPlay": false,
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T16:33:04Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.0,
+    "fieldPositionY": 0.0,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.0
+  },
+  {
+    "id": "47501009",
+    "type": {
+      "id": "94",
+      "text": "Yellow Card",
+      "type": "yellow-card"
+    },
+    "text": "Marc Gu\u00e9hi (Manchester City) is shown the yellow card for a bad foul.",
+    "shortText": "Marc Gu\u00e9hi Yellow Card",
+    "period": {
+      "number": 2
+    },
+    "clock": {
+      "value": 3555.0,
+      "displayValue": "60'"
+    },
+    "scoringPlay": false,
+    "team": {
+      "id": "382",
+      "displayName": "Manchester City"
+    },
+    "participants": [
+      {
+        "athlete": {
+          "id": "265907",
+          "displayName": "Marc Gu\u00e9hi"
+        }
+      }
+    ],
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T16:47:19Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.0,
+    "fieldPositionY": 0.0,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.0
+  },
+  {
+    "id": "47501094",
+    "type": {
+      "id": "70",
+      "text": "Goal",
+      "type": "goal"
+    },
+    "text": "Goal! Manchester City 2, Arsenal 1. Erling Haaland (Manchester City) left footed shot from the centre of the box to the bottom left corner.",
+    "shortText": "Erling Haaland Goal",
+    "period": {
+      "number": 2
+    },
+    "clock": {
+      "value": 3881.0,
+      "displayValue": "65'"
+    },
+    "scoringPlay": true,
+    "team": {
+      "id": "382",
+      "displayName": "Manchester City"
+    },
+    "participants": [
+      {
+        "athlete": {
+          "id": "253989",
+          "displayName": "Erling Haaland"
+        }
+      }
+    ],
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T16:52:46Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.186,
+    "fieldPositionY": 0.538,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.481
+  },
+  {
+    "id": "47501224",
+    "type": {
+      "id": "76",
+      "text": "Substitution",
+      "type": "substitution"
+    },
+    "text": "Substitution, Arsenal. Leandro Trossard replaces Eberechi Eze.",
+    "shortText": "Leandro Trossard Substitution",
+    "period": {
+      "number": 2
+    },
+    "clock": {
+      "value": 4418.0,
+      "displayValue": "74'"
+    },
+    "scoringPlay": false,
+    "team": {
+      "id": "359",
+      "displayName": "Arsenal"
+    },
+    "participants": [
+      {
+        "athlete": {
+          "id": "174980",
+          "displayName": "Leandro Trossard"
+        }
+      },
+      {
+        "athlete": {
+          "id": "251400",
+          "displayName": "Eberechi Eze"
+        }
+      }
+    ],
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T17:01:42Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.0,
+    "fieldPositionY": 0.0,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.0
+  },
+  {
+    "id": "47501225",
+    "type": {
+      "id": "76",
+      "text": "Substitution",
+      "type": "substitution"
+    },
+    "text": "Substitution, Arsenal. Ben White replaces Cristhian Mosquera.",
+    "shortText": "Ben White Substitution",
+    "period": {
+      "number": 2
+    },
+    "clock": {
+      "value": 4419.0,
+      "displayValue": "74'"
+    },
+    "scoringPlay": false,
+    "team": {
+      "id": "359",
+      "displayName": "Arsenal"
+    },
+    "participants": [
+      {
+        "athlete": {
+          "id": "241077",
+          "displayName": "Ben White"
+        }
+      },
+      {
+        "athlete": {
+          "id": "328497",
+          "displayName": "Cristhian Mosquera"
+        }
+      }
+    ],
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T17:01:43Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.0,
+    "fieldPositionY": 0.0,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.0
+  },
+  {
+    "id": "47501557",
+    "type": {
+      "id": "94",
+      "text": "Yellow Card",
+      "type": "yellow-card"
+    },
+    "text": "Erling Haaland (Manchester City) is shown the yellow card.",
+    "shortText": "Erling Haaland Yellow Card",
+    "period": {
+      "number": 2
+    },
+    "clock": {
+      "value": 4974.0,
+      "displayValue": "83'"
+    },
+    "scoringPlay": false,
+    "team": {
+      "id": "382",
+      "displayName": "Manchester City"
+    },
+    "participants": [
+      {
+        "athlete": {
+          "id": "253989",
+          "displayName": "Erling Haaland"
+        }
+      }
+    ],
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T17:10:58Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.0,
+    "fieldPositionY": 0.0,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.0
+  },
+  {
+    "id": "47501558",
+    "type": {
+      "id": "94",
+      "text": "Yellow Card",
+      "type": "yellow-card"
+    },
+    "text": "Gabriel Magalh\u00e3es (Arsenal) is shown the yellow card.",
+    "shortText": "Gabriel Magalh\u00e3es Yellow Card",
+    "period": {
+      "number": 2
+    },
+    "clock": {
+      "value": 4975.0,
+      "displayValue": "83'"
+    },
+    "scoringPlay": false,
+    "team": {
+      "id": "359",
+      "displayName": "Arsenal"
+    },
+    "participants": [
+      {
+        "athlete": {
+          "id": "236322",
+          "displayName": "Gabriel Magalh\u00e3es"
+        }
+      }
+    ],
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T17:11:00Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.0,
+    "fieldPositionY": 0.0,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.0
+  },
+  {
+    "id": "47501583",
+    "type": {
+      "id": "76",
+      "text": "Substitution",
+      "type": "substitution"
+    },
+    "text": "Substitution, Arsenal. Viktor Gy\u00f6keres replaces Mart\u00edn Zubimendi.",
+    "shortText": "Viktor Gy\u00f6keres Substitution",
+    "period": {
+      "number": 2
+    },
+    "clock": {
+      "value": 5017.0,
+      "displayValue": "84'"
+    },
+    "scoringPlay": false,
+    "team": {
+      "id": "359",
+      "displayName": "Arsenal"
+    },
+    "participants": [
+      {
+        "athlete": {
+          "id": "258906",
+          "displayName": "Viktor Gy\u00f6keres"
+        }
+      },
+      {
+        "athlete": {
+          "id": "287266",
+          "displayName": "Mart\u00edn Zubimendi"
+        }
+      }
+    ],
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T17:11:42Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.0,
+    "fieldPositionY": 0.0,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.0
+  },
+  {
+    "id": "47501584",
+    "type": {
+      "id": "76",
+      "text": "Substitution",
+      "type": "substitution"
+    },
+    "text": "Substitution, Manchester City. Phil Foden replaces Rayan Cherki.",
+    "shortText": "Phil Foden Substitution",
+    "period": {
+      "number": 2
+    },
+    "clock": {
+      "value": 5067.0,
+      "displayValue": "85'"
+    },
+    "scoringPlay": false,
+    "team": {
+      "id": "382",
+      "displayName": "Manchester City"
+    },
+    "participants": [
+      {
+        "athlete": {
+          "id": "250787",
+          "displayName": "Phil Foden"
+        }
+      },
+      {
+        "athlete": {
+          "id": "298008",
+          "displayName": "Rayan Cherki"
+        }
+      }
+    ],
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T17:12:31Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.0,
+    "fieldPositionY": 0.0,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.0
+  },
+  {
+    "id": "47501613",
+    "type": {
+      "id": "76",
+      "text": "Substitution",
+      "type": "substitution"
+    },
+    "text": "Substitution, Manchester City. Savinho replaces J\u00e9r\u00e9my Doku.",
+    "shortText": "Savinho  Substitution",
+    "period": {
+      "number": 2
+    },
+    "clock": {
+      "value": 5229.0,
+      "displayValue": "88'"
+    },
+    "scoringPlay": false,
+    "team": {
+      "id": "382",
+      "displayName": "Manchester City"
+    },
+    "participants": [
+      {
+        "athlete": {
+          "id": "304470",
+          "displayName": "Savinho"
+        }
+      },
+      {
+        "athlete": {
+          "id": "283672",
+          "displayName": "J\u00e9r\u00e9my Doku"
+        }
+      }
+    ],
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T17:15:14Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.0,
+    "fieldPositionY": 0.0,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.0
+  },
+  {
+    "id": "47501614",
+    "type": {
+      "id": "76",
+      "text": "Substitution",
+      "type": "substitution"
+    },
+    "text": "Substitution, Manchester City. Nico Gonz\u00e1lez replaces Rodri because of an injury.",
+    "shortText": "Nico Gonz\u00e1lez Substitution",
+    "period": {
+      "number": 2
+    },
+    "clock": {
+      "value": 5270.0,
+      "displayValue": "88'"
+    },
+    "scoringPlay": false,
+    "team": {
+      "id": "382",
+      "displayName": "Manchester City"
+    },
+    "participants": [
+      {
+        "athlete": {
+          "id": "323986",
+          "displayName": "Nico Gonz\u00e1lez"
+        }
+      },
+      {
+        "athlete": {
+          "id": "231828",
+          "displayName": "Rodri"
+        }
+      }
+    ],
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T17:15:54Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.0,
+    "fieldPositionY": 0.0,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.0
+  },
+  {
+    "id": "47501703",
+    "type": {
+      "id": "76",
+      "text": "Substitution",
+      "type": "substitution"
+    },
+    "text": "Substitution, Manchester City. Nathan Ak\u00e9 replaces Antoine Semenyo.",
+    "shortText": "Nathan Ak\u00e9 Substitution",
+    "period": {
+      "number": 2
+    },
+    "clock": {
+      "value": 5400.0,
+      "displayValue": "90'+6'"
+    },
+    "scoringPlay": false,
+    "team": {
+      "id": "382",
+      "displayName": "Manchester City"
+    },
+    "participants": [
+      {
+        "athlete": {
+          "id": "159248",
+          "displayName": "Nathan Ak\u00e9"
+        }
+      },
+      {
+        "athlete": {
+          "id": "273292",
+          "displayName": "Antoine Semenyo"
+        }
+      }
+    ],
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T17:23:18Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.0,
+    "fieldPositionY": 0.0,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.0
+  },
+  {
+    "id": "47501725",
+    "type": {
+      "id": "83",
+      "text": "End Regular Time",
+      "type": "end-regular-time"
+    },
+    "period": {
+      "number": 2
+    },
+    "clock": {
+      "value": 5400.0,
+      "displayValue": "90'+8'"
+    },
+    "scoringPlay": false,
+    "source": {
+      "id": "38",
+      "description": "SA.ENVOY"
+    },
+    "wallclock": "2026-04-19T17:25:38Z",
+    "shootout": false,
+    "goalPositionX": 0.0,
+    "goalPositionY": 0.0,
+    "fieldPositionX": 0.0,
+    "fieldPositionY": 0.0,
+    "fieldPosition2X": 0.0,
+    "fieldPosition2Y": 0.0
+  }
+]

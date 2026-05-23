@@ -1,0 +1,962 @@
+[
+  {
+    "minute": 0,
+    "text": "Lineups are announced and players are warming up.",
+    "ts_utc": null,
+    "extra_time": 0,
+    "raw_event_type": null,
+    "players": [],
+    "team": null,
+    "source": "espn"
+  },
+  {
+    "minute": 0,
+    "text": "First Half begins.",
+    "ts_utc": "2026-04-19T15:30:49+00:00",
+    "extra_time": 0,
+    "raw_event_type": "kickoff",
+    "players": [],
+    "team": null,
+    "source": "espn"
+  },
+  {
+    "minute": 1,
+    "text": "Foul by Cristhian Mosquera (Arsenal).",
+    "ts_utc": "2026-04-19T15:31:07+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 1,
+    "text": "J\u00e9r\u00e9my Doku (Manchester City) wins a free kick in the defensive half.",
+    "ts_utc": "2026-04-19T15:31:07+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 2,
+    "text": "Foul by Cristhian Mosquera (Arsenal).",
+    "ts_utc": "2026-04-19T15:32:32+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 2,
+    "text": "J\u00e9r\u00e9my Doku (Manchester City) wins a free kick in the defensive half.",
+    "ts_utc": "2026-04-19T15:32:32+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 4,
+    "text": "Attempt blocked. Erling Haaland (Manchester City) left footed shot from the centre of the box is blocked. Assisted by Nico O'Reilly.",
+    "ts_utc": "2026-04-19T15:34:44+00:00",
+    "extra_time": 0,
+    "raw_event_type": "shot-blocked",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 4,
+    "text": "Attempt blocked. Rayan Cherki (Manchester City) right footed shot from the left side of the box is blocked.",
+    "ts_utc": null,
+    "extra_time": 0,
+    "raw_event_type": null,
+    "players": [],
+    "team": null,
+    "source": "espn"
+  },
+  {
+    "minute": 5,
+    "text": "Corner, Arsenal. Conceded by Abdukodir Khusanov.",
+    "ts_utc": "2026-04-19T15:35:12+00:00",
+    "extra_time": 0,
+    "raw_event_type": "corner-kick",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 6,
+    "text": "Corner, Arsenal. Conceded by Rodri.",
+    "ts_utc": "2026-04-19T15:36:03+00:00",
+    "extra_time": 0,
+    "raw_event_type": "corner-kick",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 6,
+    "text": "Attempt missed. Cristhian Mosquera (Arsenal) header from the centre of the box is close, but misses the top right corner. Assisted by Declan Rice with a cross following a corner.",
+    "ts_utc": "2026-04-19T15:36:38+00:00",
+    "extra_time": 0,
+    "raw_event_type": "shot-off-target",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 7,
+    "text": "Offside, Arsenal. Mart\u00edn Zubimendi is caught offside.",
+    "ts_utc": "2026-04-19T15:37:42+00:00",
+    "extra_time": 0,
+    "raw_event_type": "offside",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 10,
+    "text": "Attempt blocked. Kai Havertz (Arsenal) left footed shot from the left side of the box is blocked. Assisted by Martin \u00d8degaard with a through ball.",
+    "ts_utc": "2026-04-19T15:40:27+00:00",
+    "extra_time": 0,
+    "raw_event_type": "shot-blocked",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 10,
+    "text": "Corner, Arsenal. Conceded by Matheus Nunes.",
+    "ts_utc": "2026-04-19T15:40:29+00:00",
+    "extra_time": 0,
+    "raw_event_type": "corner-kick",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 16,
+    "text": "Attempt blocked. Rayan Cherki (Manchester City) right footed shot from the right side of the box is blocked. Assisted by Bernardo Silva.",
+    "ts_utc": "2026-04-19T15:45:55+00:00",
+    "extra_time": 0,
+    "raw_event_type": "shot-blocked",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 16,
+    "text": "Goal! Manchester City 1, Arsenal 0. Rayan Cherki (Manchester City) right footed shot from the centre of the box to the bottom left corner. Assisted by Matheus Nunes.",
+    "ts_utc": "2026-04-19T15:46:15+00:00",
+    "extra_time": 0,
+    "raw_event_type": "goal",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 18,
+    "text": "Goal! Manchester City 1, Arsenal 1. Kai Havertz (Arsenal) right footed shot from the left side of the six yard box to the centre of the goal.",
+    "ts_utc": "2026-04-19T15:48:03+00:00",
+    "extra_time": 0,
+    "raw_event_type": "goal",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 19,
+    "text": "Foul by Cristhian Mosquera (Arsenal).",
+    "ts_utc": "2026-04-19T15:49:26+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 19,
+    "text": "J\u00e9r\u00e9my Doku (Manchester City) wins a free kick on the left wing.",
+    "ts_utc": "2026-04-19T15:49:26+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 26,
+    "text": "J\u00e9r\u00e9my Doku (Manchester City) wins a free kick in the attacking half.",
+    "ts_utc": "2026-04-19T15:56:31+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 26,
+    "text": "Foul by Mart\u00edn Zubimendi (Arsenal).",
+    "ts_utc": "2026-04-19T15:56:31+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 27,
+    "text": "Attempt missed. Erling Haaland (Manchester City) left footed shot from outside the box misses to the left. Assisted by J\u00e9r\u00e9my Doku.",
+    "ts_utc": "2026-04-19T15:57:34+00:00",
+    "extra_time": 0,
+    "raw_event_type": "shot-off-target",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 28,
+    "text": "Marc Gu\u00e9hi (Manchester City) wins a free kick in the defensive half.",
+    "ts_utc": "2026-04-19T15:58:41+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 28,
+    "text": "Foul by Martin \u00d8degaard (Arsenal).",
+    "ts_utc": "2026-04-19T15:58:41+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 30,
+    "text": "Mart\u00edn Zubimendi (Arsenal) wins a free kick in the attacking half.",
+    "ts_utc": "2026-04-19T16:00:15+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 30,
+    "text": "Foul by J\u00e9r\u00e9my Doku (Manchester City).",
+    "ts_utc": "2026-04-19T16:00:15+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 31,
+    "text": "Rodri (Manchester City) wins a free kick in the defensive half.",
+    "ts_utc": "2026-04-19T16:01:02+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 31,
+    "text": "Foul by Declan Rice (Arsenal).",
+    "ts_utc": "2026-04-19T16:01:02+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 33,
+    "text": "Corner, Manchester City. Conceded by Declan Rice.",
+    "ts_utc": null,
+    "extra_time": 0,
+    "raw_event_type": null,
+    "players": [],
+    "team": null,
+    "source": "espn"
+  },
+  {
+    "minute": 33,
+    "text": "Attempt missed. Erling Haaland (Manchester City) header from the left side of the six yard box misses to the right. Assisted by Rayan Cherki with a cross following a corner.",
+    "ts_utc": "2026-04-19T16:03:29+00:00",
+    "extra_time": 0,
+    "raw_event_type": "shot-off-target",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 33,
+    "text": "Attempt saved. Marc Gu\u00e9hi (Manchester City) header from the centre of the box is saved in the top centre of the goal by David Raya (Arsenal). Assisted by Abdukodir Khusanov with a cross.",
+    "ts_utc": "2026-04-19T16:03:37+00:00",
+    "extra_time": 0,
+    "raw_event_type": "shot-on-target",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 33,
+    "text": "David Raya (Arsenal) wins a free kick in the defensive half.",
+    "ts_utc": "2026-04-19T16:03:43+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 33,
+    "text": "Foul by Nico O'Reilly (Manchester City).",
+    "ts_utc": "2026-04-19T16:03:43+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 36,
+    "text": "J\u00e9r\u00e9my Doku (Manchester City) wins a free kick in the defensive half.",
+    "ts_utc": "2026-04-19T16:06:25+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 36,
+    "text": "Foul by Cristhian Mosquera (Arsenal).",
+    "ts_utc": "2026-04-19T16:06:25+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 36,
+    "text": "Cristhian Mosquera (Arsenal) is shown the yellow card.",
+    "ts_utc": "2026-04-19T16:06:27+00:00",
+    "extra_time": 0,
+    "raw_event_type": "yellow-card",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 37,
+    "text": "Eberechi Eze (Arsenal) wins a free kick in the defensive half.",
+    "ts_utc": "2026-04-19T16:07:13+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 37,
+    "text": "Foul by Matheus Nunes (Manchester City).",
+    "ts_utc": "2026-04-19T16:07:13+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 39,
+    "text": "Offside, Arsenal. Kai Havertz is caught offside.",
+    "ts_utc": "2026-04-19T16:09:38+00:00",
+    "extra_time": 0,
+    "raw_event_type": "offside",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 40,
+    "text": "Corner, Arsenal. Conceded by Abdukodir Khusanov.",
+    "ts_utc": "2026-04-19T16:10:14+00:00",
+    "extra_time": 0,
+    "raw_event_type": "corner-kick",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 42,
+    "text": "Attempt blocked. Antoine Semenyo (Manchester City) right footed shot from the right side of the box is blocked. Assisted by Rayan Cherki.",
+    "ts_utc": "2026-04-19T16:12:14+00:00",
+    "extra_time": 0,
+    "raw_event_type": "shot-blocked",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 42,
+    "text": "Corner, Manchester City. Conceded by Piero Hincapi\u00e9.",
+    "ts_utc": null,
+    "extra_time": 0,
+    "raw_event_type": null,
+    "players": [],
+    "team": null,
+    "source": "espn"
+  },
+  {
+    "minute": 43,
+    "text": "Corner, Manchester City. Conceded by Gabriel Magalh\u00e3es.",
+    "ts_utc": null,
+    "extra_time": 0,
+    "raw_event_type": null,
+    "players": [],
+    "team": null,
+    "source": "espn"
+  },
+  {
+    "minute": 43,
+    "text": "Cristhian Mosquera (Arsenal) wins a free kick in the defensive half.",
+    "ts_utc": "2026-04-19T16:13:40+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 43,
+    "text": "Foul by Marc Gu\u00e9hi (Manchester City).",
+    "ts_utc": "2026-04-19T16:13:40+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 45,
+    "text": "Fourth official has announced 1 minutes of added time.",
+    "ts_utc": null,
+    "extra_time": 0,
+    "raw_event_type": null,
+    "players": [],
+    "team": null,
+    "source": "espn"
+  },
+  {
+    "minute": 45,
+    "text": "J\u00e9r\u00e9my Doku (Manchester City) wins a free kick in the defensive half.",
+    "ts_utc": "2026-04-19T16:16:12+00:00",
+    "extra_time": 1,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 45,
+    "text": "Foul by Martin \u00d8degaard (Arsenal).",
+    "ts_utc": "2026-04-19T16:16:12+00:00",
+    "extra_time": 1,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 45,
+    "text": "First Half ends, Manchester City 1, Arsenal 1.",
+    "ts_utc": "2026-04-19T16:16:51+00:00",
+    "extra_time": 2,
+    "raw_event_type": "halftime",
+    "players": [],
+    "team": null,
+    "source": "espn"
+  },
+  {
+    "minute": 45,
+    "text": "Second Half begins Manchester City 1, Arsenal 1.",
+    "ts_utc": null,
+    "extra_time": 0,
+    "raw_event_type": null,
+    "players": [],
+    "team": null,
+    "source": "espn"
+  },
+  {
+    "minute": 45,
+    "text": "Substitution, Arsenal. Gabriel Martinelli replaces Noni Madueke.",
+    "ts_utc": "2026-04-19T16:32:17+00:00",
+    "extra_time": 0,
+    "raw_event_type": "substitution",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 46,
+    "text": "Foul by Declan Rice (Arsenal).",
+    "ts_utc": "2026-04-19T16:33:42+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 46,
+    "text": "Bernardo Silva (Manchester City) wins a free kick in the defensive half.",
+    "ts_utc": "2026-04-19T16:33:42+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 48,
+    "text": "Corner, Manchester City. Conceded by Gabriel Magalh\u00e3es.",
+    "ts_utc": "2026-04-19T16:35:10+00:00",
+    "extra_time": 0,
+    "raw_event_type": "corner-kick",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 48,
+    "text": "Attempt blocked. Abdukodir Khusanov (Manchester City) right footed shot from the centre of the box is blocked.",
+    "ts_utc": null,
+    "extra_time": 0,
+    "raw_event_type": null,
+    "players": [],
+    "team": null,
+    "source": "espn"
+  },
+  {
+    "minute": 48,
+    "text": "Erling Haaland (Manchester City) hits the right post with a left footed shot from the right side of the six yard box following a corner.",
+    "ts_utc": "2026-04-19T16:35:52+00:00",
+    "extra_time": 0,
+    "raw_event_type": "shot-hit-woodwork",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 52,
+    "text": "Attempt saved. J\u00e9r\u00e9my Doku (Manchester City) right footed shot from the centre of the box is saved in the centre of the goal by David Raya (Arsenal). Assisted by Abdukodir Khusanov.",
+    "ts_utc": "2026-04-19T16:39:16+00:00",
+    "extra_time": 0,
+    "raw_event_type": "shot-on-target",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 53,
+    "text": "Nico O'Reilly (Manchester City) wins a free kick in the defensive half.",
+    "ts_utc": "2026-04-19T16:40:24+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 53,
+    "text": "Foul by Gabriel Martinelli (Arsenal).",
+    "ts_utc": "2026-04-19T16:40:24+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 57,
+    "text": "Offside, Arsenal. Kai Havertz is caught offside.",
+    "ts_utc": "2026-04-19T16:44:10+00:00",
+    "extra_time": 0,
+    "raw_event_type": "offside",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 58,
+    "text": "Corner, Manchester City. Conceded by Piero Hincapi\u00e9.",
+    "ts_utc": null,
+    "extra_time": 0,
+    "raw_event_type": null,
+    "players": [],
+    "team": null,
+    "source": "espn"
+  },
+  {
+    "minute": 60,
+    "text": "Attempt saved. Kai Havertz (Arsenal) left footed shot from the centre of the box is saved in the bottom left corner by Gianluigi Donnarumma (Manchester City). Assisted by Martin \u00d8degaard.",
+    "ts_utc": "2026-04-19T16:47:05+00:00",
+    "extra_time": 0,
+    "raw_event_type": "shot-on-target",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 60,
+    "text": "Attempt blocked. Gabriel Martinelli (Arsenal) right footed shot from the centre of the box is blocked.",
+    "ts_utc": "2026-04-19T16:47:07+00:00",
+    "extra_time": 0,
+    "raw_event_type": "shot-blocked",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 60,
+    "text": "Marc Gu\u00e9hi (Manchester City) is shown the yellow card for a bad foul.",
+    "ts_utc": "2026-04-19T16:47:19+00:00",
+    "extra_time": 0,
+    "raw_event_type": "yellow-card",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 61,
+    "text": "Eberechi Eze (Arsenal) hits the left post with a left footed shot from outside the box. Assisted by Martin \u00d8degaard.",
+    "ts_utc": "2026-04-19T16:48:20+00:00",
+    "extra_time": 0,
+    "raw_event_type": "shot-hit-woodwork",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 64,
+    "text": "Attempt missed. Bernardo Silva (Manchester City) left footed shot from the centre of the box misses to the left. Assisted by Erling Haaland.",
+    "ts_utc": "2026-04-19T16:51:13+00:00",
+    "extra_time": 0,
+    "raw_event_type": "shot-off-target",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 65,
+    "text": "Goal! Manchester City 2, Arsenal 1. Erling Haaland (Manchester City) left footed shot from the centre of the box to the bottom left corner.",
+    "ts_utc": "2026-04-19T16:52:46+00:00",
+    "extra_time": 0,
+    "raw_event_type": "goal",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 68,
+    "text": "Attempt blocked. Rodri (Manchester City) left footed shot from outside the box is blocked.",
+    "ts_utc": "2026-04-19T16:56:03+00:00",
+    "extra_time": 0,
+    "raw_event_type": "shot-blocked",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 69,
+    "text": "Corner, Manchester City. Conceded by William Saliba.",
+    "ts_utc": "2026-04-19T16:56:06+00:00",
+    "extra_time": 0,
+    "raw_event_type": "corner-kick",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 69,
+    "text": "Corner, Manchester City. Conceded by William Saliba.",
+    "ts_utc": "2026-04-19T16:56:57+00:00",
+    "extra_time": 0,
+    "raw_event_type": "corner-kick",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 70,
+    "text": "Attempt missed. J\u00e9r\u00e9my Doku (Manchester City) left footed shot from the left side of the box misses to the left following a corner.",
+    "ts_utc": "2026-04-19T16:57:41+00:00",
+    "extra_time": 0,
+    "raw_event_type": "shot-off-target",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 72,
+    "text": "Eberechi Eze (Arsenal) wins a free kick in the attacking half.",
+    "ts_utc": "2026-04-19T16:59:16+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 72,
+    "text": "Foul by Bernardo Silva (Manchester City).",
+    "ts_utc": "2026-04-19T16:59:16+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 73,
+    "text": "Attempt blocked. Gabriel Magalh\u00e3es (Arsenal) header from the right side of the box is blocked. Assisted by Martin \u00d8degaard.",
+    "ts_utc": null,
+    "extra_time": 0,
+    "raw_event_type": null,
+    "players": [],
+    "team": null,
+    "source": "espn"
+  },
+  {
+    "minute": 73,
+    "text": "Attempt blocked. Kai Havertz (Arsenal) left footed shot from the right side of the six yard box is blocked.",
+    "ts_utc": "2026-04-19T17:00:12+00:00",
+    "extra_time": 0,
+    "raw_event_type": "shot-blocked",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 74,
+    "text": "Substitution, Arsenal. Leandro Trossard replaces Eberechi Eze.",
+    "ts_utc": "2026-04-19T17:01:42+00:00",
+    "extra_time": 0,
+    "raw_event_type": "substitution",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 74,
+    "text": "Substitution, Arsenal. Ben White replaces Cristhian Mosquera.",
+    "ts_utc": "2026-04-19T17:01:43+00:00",
+    "extra_time": 0,
+    "raw_event_type": "substitution",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 77,
+    "text": "Corner, Manchester City. Conceded by Ben White.",
+    "ts_utc": "2026-04-19T17:04:54+00:00",
+    "extra_time": 0,
+    "raw_event_type": "corner-kick",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 78,
+    "text": "Handball by Kai Havertz (Arsenal).",
+    "ts_utc": "2026-04-19T17:05:45+00:00",
+    "extra_time": 0,
+    "raw_event_type": "handball",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 79,
+    "text": "Offside, Arsenal. Leandro Trossard is caught offside.",
+    "ts_utc": "2026-04-19T17:06:55+00:00",
+    "extra_time": 0,
+    "raw_event_type": "offside",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 83,
+    "text": "Erling Haaland (Manchester City) wins a free kick in the attacking half.",
+    "ts_utc": "2026-04-19T17:10:20+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 83,
+    "text": "Foul by Gabriel Magalh\u00e3es (Arsenal).",
+    "ts_utc": "2026-04-19T17:10:20+00:00",
+    "extra_time": 0,
+    "raw_event_type": "foul",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 83,
+    "text": "Erling Haaland (Manchester City) is shown the yellow card.",
+    "ts_utc": "2026-04-19T17:10:58+00:00",
+    "extra_time": 0,
+    "raw_event_type": "yellow-card",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 83,
+    "text": "Gabriel Magalh\u00e3es (Arsenal) is shown the yellow card.",
+    "ts_utc": "2026-04-19T17:11:00+00:00",
+    "extra_time": 0,
+    "raw_event_type": "yellow-card",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 84,
+    "text": "Substitution, Arsenal. Viktor Gy\u00f6keres replaces Mart\u00edn Zubimendi.",
+    "ts_utc": "2026-04-19T17:11:42+00:00",
+    "extra_time": 0,
+    "raw_event_type": "substitution",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 85,
+    "text": "Substitution, Manchester City. Phil Foden replaces Rayan Cherki.",
+    "ts_utc": "2026-04-19T17:12:31+00:00",
+    "extra_time": 0,
+    "raw_event_type": "substitution",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 87,
+    "text": "Delay in match because of an injury Rodri (Manchester City).",
+    "ts_utc": null,
+    "extra_time": 0,
+    "raw_event_type": null,
+    "players": [],
+    "team": null,
+    "source": "espn"
+  },
+  {
+    "minute": 88,
+    "text": "Substitution, Manchester City. Savinho replaces J\u00e9r\u00e9my Doku.",
+    "ts_utc": "2026-04-19T17:15:14+00:00",
+    "extra_time": 0,
+    "raw_event_type": "substitution",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 88,
+    "text": "Substitution, Manchester City. Nico Gonz\u00e1lez replaces Rodri because of an injury.",
+    "ts_utc": "2026-04-19T17:15:54+00:00",
+    "extra_time": 0,
+    "raw_event_type": "substitution",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 88,
+    "text": "Delay over. They are ready to continue.",
+    "ts_utc": null,
+    "extra_time": 0,
+    "raw_event_type": null,
+    "players": [],
+    "team": null,
+    "source": "espn"
+  },
+  {
+    "minute": 90,
+    "text": "Fourth official has announced 7 minutes of added time.",
+    "ts_utc": null,
+    "extra_time": 0,
+    "raw_event_type": null,
+    "players": [],
+    "team": null,
+    "source": "espn"
+  },
+  {
+    "minute": 90,
+    "text": "Corner, Arsenal. Conceded by Matheus Nunes.",
+    "ts_utc": "2026-04-19T17:21:38+00:00",
+    "extra_time": 4,
+    "raw_event_type": "corner-kick",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 90,
+    "text": "Attempt missed. Kai Havertz (Arsenal) header from the centre of the box is just a bit too high. Assisted by Leandro Trossard with a cross.",
+    "ts_utc": "2026-04-19T17:22:40+00:00",
+    "extra_time": 5,
+    "raw_event_type": "shot-off-target",
+    "players": [],
+    "team": "Arsenal",
+    "source": "espn"
+  },
+  {
+    "minute": 90,
+    "text": "Substitution, Manchester City. Nathan Ak\u00e9 replaces Antoine Semenyo.",
+    "ts_utc": "2026-04-19T17:23:18+00:00",
+    "extra_time": 6,
+    "raw_event_type": "substitution",
+    "players": [],
+    "team": "Manchester City",
+    "source": "espn"
+  },
+  {
+    "minute": 90,
+    "text": "Second Half ends, Manchester City 2, Arsenal 1.",
+    "ts_utc": null,
+    "extra_time": 8,
+    "raw_event_type": null,
+    "players": [],
+    "team": null,
+    "source": "espn"
+  },
+  {
+    "minute": 0,
+    "text": "Match ends, Manchester City 2, Arsenal 1.",
+    "ts_utc": null,
+    "extra_time": 0,
+    "raw_event_type": null,
+    "players": [],
+    "team": null,
+    "source": "espn"
+  }
+]
