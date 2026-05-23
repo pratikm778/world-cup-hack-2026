@@ -1,0 +1,44 @@
+# Cloned reference repos (not part of this project's source)
+rocketride-server/
+rocketride-docs/
+rocketride-workshops/
+awesome-rocketride/
+gmi-python-sdk/
+ai-sdk-provider-gmicloud/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+*.egg-info/
+
+# Node / TypeScript
+node_modules/
+.next/
+.turbo/
+.parcel-cache/
+*.tsbuildinfo
+pnpm-debug.log*
+npm-debug.log*
+
+# RocketRide runtime artifacts
+.rocketride/
+*.pipe.log
+
+# Editor / OS
+.DS_Store
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp

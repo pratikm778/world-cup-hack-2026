@@ -1,0 +1,189 @@
+
+Events
+Calendars
+Discover
+10:47 AM PDT
+Create Event
+
+
+Cover Image for Google I/O Kickoff: Pre-World Cup Hack ⚽
+Cover Image for Google I/O Kickoff: Pre-World Cup Hack ⚽
+Hosted By
+Francesca Sala
+Roan Weigert
+GMI Cloud
+Joe Maionchi
+550 Going
+
+Zoey Ballard, Vidit Kulkarni and 548 others
+
+Contact the Host
+
+Report Event
+AI
+San Francisco
+Featured in 
+San Francisco
+Google I/O Kickoff: Pre-World Cup Hack ⚽
+May
+23
+Saturday, May 23
+9:00 AM - 8:30 PM
+60 Francisco St
+San Francisco, CA
+LIVE
+You’re In
+
+My Ticket
+
+
+Invite a Friend
+No longer able to attend? Notify the host by canceling your registration.
+Profile Complete · Reminder Off
+About Event
+​The whistle just blew at Google I/O. The World Cup kicks off in 3 weeks. There's no better time to ship something real.
+
+​Join GDG (Google Developer Group) Newport Beach, RocketRide, and GMI Cloud for a one-day build sprint in San Francisco, right after Google I/O drops its biggest AI announcements of the year. Your challenge: build AI-powered agentic apps with what just shipped, before the world's attention shifts to the pitch.
+
+​⚽ WHY JOIN
+
+​Build with the freshest Google I/O releases
+
+​Build faster with RocketRide - skip the orchestration headaches and focus on what your agent actually does
+
+​Run inference on NVIDIA H100/H200 GPUs via GMI Cloud, free credits for all participants
+
+​Compete for prizes and fast-track into the GMI Clouders Ambassador program
+
+​Enjoy a proper Brazilian BBQ lunch, because great builds deserve great food
+
+​Connect with the sharpest AI builders in SF
+
+​📅 SCHEDULE — Saturday, May 23, 2026
+
+​09:00 — Doors open + full breakfast spread + team formation 10:00 — Kickoff: Google Workshop
+10:30 — GMI cloud workshop
+10:45 — RocketRide workshop
+11:30 - Team formation and Team submission deadline
+01:30 — Brazilian BBQ lunch (keep building)
+5:00 - Submission deadline
+05:10 — Demo presentations (3 min per team) + (2 min Q&A) Judging
+08:00 — Prizes announced
+08:30 — Closing + networking
+
+​⚙️ THE STACK
+
+​GMI Cloud — NVIDIA-powered GPU inference, 170+ models, OpenAI-compatible API, NVIDIA Cloud Partners globally
+
+​Google AI Studio — build with the models that just shipped at I/O
+
+​RocketRide — open-source runtime for building and deploying AI solutions: any models, any agents, your stack.
+
+​Mentors for Google, GMI Cloud and RocketRide on site
+
+​All participants receive free GMI Cloud inference credits to use during and after the event.
+
+​🏆 PRIZES (Cash 💰)
+
+​1st Place: $2,000
+2nd Place: $800
+3rd Place: $200
+
+​👥 JUDGES
+
+​Abhinav Balasubramanian, Staff AI Engineer @ NVIDIA
+Magne Jul Pedersen, VC @ Exponential VC
+Sachin Gupta, E-Commerce Engineering Leader @ eBay
+Joe Maionchi, Co-Founder & COO RocketRide
+Roan Weigert, DevRel AI Engineer @ GMI Cloud
+William Viet Tran, ML/GenAI @ Meta
+Francesca Sala, GDG Newport Beach Lead
+Jose Escoto, Senior Engineer @ City County San Francisco
+Francis Ma, Tech executive, ex-google
+Francis Oledibe, Software Engineer @ Netflix
+
+​📋 RULES
+
+​Teams of 1–4 people; solo submissions welcome
+
+​Projects must be started at the event (no pre-built apps)
+
+​Must use Google technologies, GMI Cloud and RocketRide
+
+​Submit via GitHub repo + 3-minute live demo + 2-minute Q&A
+
+​In-person attendance required for prize eligibility
+
+​👥 COMMUNITY
+
+​Brought to you by GDG Newport Beach x RocketRide x GMI Cloud x NVIDIA
+
+​By registering, you agree to the event terms and conditions. Attendance implies consent to photography and video recording for promotional use.
+
+Blasts
+Francesca Sala
+Yesterday, 8:24 PM
+TOMORROW IS THE DAY
+​We're so excited to see everyone tomorrow! Here's everything you need to know to show up ready to build.
+
+​⏰ Key Times
+
+​Doors open at 9:00 AM - come grab breakfast, meet your team, and get settled. First talk kicks off at 10:00 AM with Google, covering the freshest AI Studio releases straight from I/O week. Don't be late!
+
+​Full schedule on Luma.
+
+​🏆 Prizes - Cash Money 💰
+
+​1st Place: $2,000
+2nd Place: $800
+3rd Place: $200
+
+​⚙️ Get a Head Start Tonight
+
+​GMI Cloud - Create your account on GMI Console tonight so you're ready to run inference from minute one. Check the GMI docs to get familiar with the API.
+
+​RocketRide - Check out the GitHub repo and install the VS Code or Cursor extension before you arrive.
+
+​Google AI Studio Check out useful links: https://ai.google.dev/gemini-api/docs/ai-studio-quickstart
+
+​https://ai.google.dev/gemini-api/docs/api-key
+
+Roan Weigert
+May 21, 8:39 PM
+🚨 TWO DAYS AWAY
+​Hey everyone! The event is this Saturday, I'm super excited!
+
+​⚠️ Quick favor: We have 100+ people on the waitlist. If you can't make it, please cancel your RSVP now so someone else gets your spot. It takes 10 seconds and means the world to someone waiting.
+
+​Getting Here - 50 Francisco St, SF 94133
+
+​🚃 F-Train (Muni) drops you right at Fisherman's Wharf, steps from the venue. Super easy from Market St or the Castro.
+🚌 Bus 8 (Bayshore) ends at Kearny St & North Point St, a short walk away. Runs every 7-10 min on Saturdays if you are coming from Caltrain.
+🚗 Parking available on-site. Weekend flat rate: $20.99 (until 7 pm), or street park
+
+​Once you arrive, the venue is on the left side as you enter the 50 Francisco St building.
+
+
+User Uploaded Image
+​🍱 Lunch - Active Teams Only
+
+​We're serving lunch for registered, active teams only. Your team must be formed and listed by 11:30 AM to qualify. Lock in your teammates early!
+
+​🏆 Judges
+
+​We have an amazing panel of judges lined up, can't wait to introduce them on the day.
+
+​Get a head start! Check out the GMI Cloud Console and RocketRide guides so you hit the ground running on Saturday. 🚀
+
+​See you Saturday. Let's build something cool. ⚽🤖
+
+
+User Uploaded Image
+Location
+60 Francisco St
+San Francisco, CA 94133, USA
+
+DiscoverPricingHelp
+
+
+1
