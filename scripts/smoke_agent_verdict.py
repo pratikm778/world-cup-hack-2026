@@ -14,6 +14,8 @@ import json
 import os
 import re
 import sys
+import ssl
+import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -106,7 +108,6 @@ def main() -> None:
         method="POST",
     )
 
-    import ssl, urllib.error
     t0 = datetime.now(timezone.utc)
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
