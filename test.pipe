@@ -30,20 +30,20 @@
       "config": {
         "profile": "gemini-3-flash",
         "deepseek-v3": {
-          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE2OTAzYzM4LTIwMWMtNGY4YS04ZTBiLTdkYjU2MTE0NmRjYyIsInNjb3BlIjoiaWVfbW9kZWwiLCJjbGllbnRJZCI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMCJ9.Ye0MoVpSEXVCamyBcfImtLTtQDLjJypal6EVpVouU-0"
+          "apikey": "${ROCKETRIDE_GMI_API_KEY}"
         },
         "name": "GMI Cloud",
         "parameters": {
           "google": {}
         },
         "gemini-3-flash": {
-          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE2OTAzYzM4LTIwMWMtNGY4YS04ZTBiLTdkYjU2MTE0NmRjYyIsInNjb3BlIjoiaWVfbW9kZWwiLCJjbGllbnRJZCI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMCJ9.Ye0MoVpSEXVCamyBcfImtLTtQDLjJypal6EVpVouU-0"
+          "apikey": "${ROCKETRIDE_GMI_API_KEY}"
         },
         "custom": {
           "serverbase": "https://api.gmi-serving.com/v1/chat/completions",
           "model": "google/gemini-3.5-flash",
           "modelTotalTokens": 512,
-          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE2OTAzYzM4LTIwMWMtNGY4YS04ZTBiLTdkYjU2MTE0NmRjYyIsInNjb3BlIjoiaWVfbW9kZWwiLCJjbGllbnRJZCI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMCJ9.Ye0MoVpSEXVCamyBcfImtLTtQDLjJypal6EVpVouU-0"
+          "apikey": "${ROCKETRIDE_GMI_API_KEY}"
         }
       },
       "ui": {
@@ -97,7 +97,7 @@
         "rateLimitPerMinute": 100,
         "rateLimitPerSecond": 10,
         "type": "tool_http_request",
-        "urlWhitelist": [],
+        "urlWhitelist": ["http://localhost:8765"],
         "name": "HTTP Request"
       },
       "ui": {
@@ -167,9 +167,9 @@
           "from": "agent_deepagent_1"
         }
       ]
-    }
+    },
   ],
-  "project_id": "e6f8bdc9-3008-43dc-bbcc-4d200ebcab9e",
+  "project_id": "71ccb6ee-7db8-4d02-bdf1-7c4b8443d5e3",
   "isLocked": false,
   "snapToGrid": true,
   "snapGridSize": [
