@@ -1,0 +1,117 @@
+{
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "name": "GMI ranker",
+  "description": "Ranks Polymarket candidates with GMI Cloud through RocketRide.",
+  "components": [
+    {
+      "id": "chat_1",
+      "provider": "chat",
+      "name": "Ranking prompt",
+      "config": {
+        "hideForm": true,
+        "mode": "Source",
+        "parameters": {},
+        "type": "chat"
+      },
+      "ui": {
+        "position": {
+          "x": 80,
+          "y": 80
+        },
+        "measured": {
+          "width": 176,
+          "height": 61
+        },
+        "data": {
+          "provider": "chat",
+          "class": [
+            "source"
+          ],
+          "type": "default",
+          "content": ""
+        },
+        "formDataValid": true
+      }
+    },
+    {
+      "id": "llm_gmi_cloud_1",
+      "provider": "llm_gmi_cloud",
+      "name": "GMI Cloud",
+      "config": {
+        "profile": "custom",
+        "custom": {
+          "model": "google/gemma-4-31b-it",
+          "serverbase": "https://api.gmi-serving.com/v1",
+          "apikey": "${GMI_API_KEY}",
+          "modelTotalTokens": 16384
+        },
+        "parameters": {}
+      },
+      "input": [
+        {
+          "lane": "questions",
+          "from": "chat_1"
+        }
+      ],
+      "ui": {
+        "position": {
+          "x": 320,
+          "y": 80
+        },
+        "measured": {
+          "width": 176,
+          "height": 96
+        },
+        "data": {
+          "provider": "llm_gmi_cloud",
+          "class": [
+            "llm"
+          ],
+          "type": "default",
+          "content": ""
+        },
+        "formDataValid": true
+      }
+    },
+    {
+      "id": "response_answers_1",
+      "provider": "response_answers",
+      "name": "Response",
+      "config": {
+        "laneName": "answers"
+      },
+      "input": [
+        {
+          "lane": "answers",
+          "from": "llm_gmi_cloud_1"
+        }
+      ],
+      "ui": {
+        "position": {
+          "x": 560,
+          "y": 80
+        },
+        "measured": {
+          "width": 176,
+          "height": 61
+        },
+        "data": {
+          "provider": "response_answers",
+          "class": [
+            "target"
+          ],
+          "type": "default",
+          "content": ""
+        },
+        "formDataValid": true
+      }
+    }
+  ],
+  "source": "chat_1",
+  "project_id": "9f2a6f43-64f8-4d97-88d2-9f8bf6a97743",
+  "version": 1
+}

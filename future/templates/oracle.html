@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Polymarket Signal Desk</title>
+    <link rel="stylesheet" href="/static/oracle.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">RocketRide + Exa + GMI</p>
+            <h1 class="cyber-glitch" data-text="Polymarket Signal Desk">Polymarket Signal Desk</h1>
+            <p class="subhead">Live Polymarket markets, RocketRide search evidence, and GMI ranking in one hostile terminal.</p>
+          </div>
+          <div class="status">
+            <span class="dot"></span>
+            Signal online
+          </div>
+        </header>
+
+        <section class="control-panel">
+          <form id="top-bets-form" class="top-bets-form">
+            <label>
+              Live Polymarket search
+              <input name="theme" value="football soccer today" autocomplete="off" />
+            </label>
+            <button type="submit">Rank live bets</button>
+          </form>
+        </section>
+
+        <section class="rankings terminal-panel">
+          <div class="section-head">
+            <h2>Live Polymarket bets</h2>
+            <span class="terminal-cursor">awaiting feed</span>
+          </div>
+          <div id="rankings">No ranked bets yet.</div>
+        </section>
+      </section>
+
+      <aside class="tape">
+        <div class="terminal-dots" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <h2>Trace</h2>
+        <pre id="trace">Ready.</pre>
+      </aside>
+    </main>
+
+    <script src="/static/oracle.js"></script>
+  </body>
+</html>
