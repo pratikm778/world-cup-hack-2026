@@ -1,4 +1,4 @@
-# EdgeCast — Hackathon Spec (v3 — single-LLM via GMI, vector search, 3-person team)
+# EdgeCast — Hackathon Spec (v4 — periodic agent, file-based stores, no vector corpus)
 
 > A market-aware co-watcher for live sports prediction markets.
 > Built for the **Google I/O Kickoff: Pre-World Cup Hack** — May 23, 2026.
@@ -7,18 +7,21 @@
 
 ## Status
 
-- **Now:** ~2:15 PM PDT
+- **Now:** ~4:30 PM PDT
 - **Submission:** 5:00 PM PDT
 - **Demo:** 5:10 PM (3 min + 2 min Q&A)
-- **Build budget:** ~2h 45m wall-clock × 3 people = **~8 person-hours**
 - **Repo:** [pratikm778/world-cup-hack-2026](https://github.com/pratikm778/world-cup-hack-2026)
-- **API key:** `GMI_API_KEY` in `.env`; direct smoke target is `google/gemini-3.5-flash` on `api.gmi-serving.com`. `.env` is gitignored and untracked.
+- **API key:** `GMI_API_KEY` + `ROCKETRIDE_GMI_API_KEY` in `.env` (same value). `.env` is gitignored.
+- **Architecture pivot since v3:** vector store + fact corpus deferred;
+  agent reasons over a fresh-window tick payload plus two HTTP lookup
+  tools backed by the on-disk match data. `tool_python` dropped (sandbox
+  blocks filesystem). Source switched to `webhook` (periodic cron-driven).
 
 ### Team (collaborators on repo, push access)
 
 | Member | GitHub | Track |
 | --- | --- | --- |
-| Pratik | `pratikm778` (owner) | **C** — RocketRide pipeline, prompts, vector store, historical corpus |
+| Pratik | `pratikm778` (owner) | **C** — RocketRide pipeline, prompts, agent IO server, lookup tools |
 | Sajay | `sajayv98` | **A** — Frontend, three-pane UI, SSE consumption |
 | Kaushik Sivakumar | `KaushikSiva` | **B** — FastAPI backend, replay engine, /api/chat, seed data, fallbacks |
 
@@ -34,12 +37,16 @@
 
 | Decision | Value |
 | --- | --- |
-| **Data source** | Static JSON, scripted simulation. No scraping, no real Polymarket API. |
-| **Demo mode** | Live LLM calls, scripted event triggers, 5s timeout + per-event fallback templates. |
-| **Pre-event flags** | Cut. Agent reacts to events only — never predicts. |
+| **Data source** | Static JSON pulled once from ESPN + Polymarket (`scripts/providers/`), seeded under `data/matches/<id>/`. No live scraping during demo. |
+| **Demo mode** | Live LLM calls, **periodic 60s cron tick** (not event-triggered), 5s timeout + per-tick fallback templates. |
+| **Trigger model** | Periodic, not event-driven. External cron POSTs a fresh-window payload (last 5 min of events, commentary, top-5 polymarket movers) to the RocketRide webhook every `TICK_SECONDS`. Agent decides per tick whether to broadcast or stay silent. |
 | **Brand** | Generic "sports prediction markets." Polymarket name appears nowhere. |
+| **Agent** | `agent_deepagent` (not `agent_rocketride`). No memory port; cross-event recall handled via fresh-window payload + lookup tools. |
 | **LLM (single)** | `llm_gmi_cloud` with **Custom profile** → `google/gemini-3.5-flash` via `https://api.gmi-serving.com/v1`. **Ticks GMI Cloud + Google requirements in one call.** |
-| **Historical context** | 30-40 hand-authored fact snippets (players, teams, matchup history) indexed in `vectordb_postgres` via `embedding_transformer` (local, no API key). |
+| **Agent tools** | `tool_http_request` (whitelisted to `localhost:8765`, calls the agent IO server's lookup endpoints), `tool_exa_search` (player/team lookup). `tool_python` was evaluated and dropped — its sandbox has no filesystem/network access. |
+| **Historical context** | **Deferred.** Vector store + `vectordb_postgres` + `facts.jsonl` cut from v1; agent reasons over the fresh-window payload + lookup tools only. Revisit if time allows. |
+| **Lookup tools** | Two HTTP endpoints on a local FastAPI (`scripts/agent_io_server.py`): `GET /market/{id}/window` (polymarket price history, agg=raw/delta/range) and `GET /events_window` (key_events + commentary by minute window). Both read directly from `data/matches/<id>/`. |
+| **Env var interpolation** | RocketRide only substitutes `${ROCKETRIDE_*}` vars in `.pipe` configs (per docs). GMI key lives twice in `.env`: `GMI_API_KEY` for application code, `ROCKETRIDE_GMI_API_KEY` for the pipeline file. |
 | **Scaffold** | Copy `rocketride-workshops/workshops/coding-agent/solution/` as the starting skeleton. |
 | **Name** | EdgeCast (placeholder — only swap once in the first 10 min, then stop). |
 
@@ -58,223 +65,194 @@
 │  │ Chat feed   │ Minute clock +   │ Hot Markets    │   │
 │  │ (40%)       │ commentary (35%) │ sidebar (25%)  │   │
 │  └─────────────┴──────────────────┴────────────────┘   │
-│         ▲                                  ▲           │
-│         │ SSE: broadcast msgs              │ /state    │
-│         │ POST: chat questions             │ (1s poll) │
-└─────────┼──────────────────────────────────┼───────────┘
-          ▼                                  ▼
+│         ▲                                              │
+│         │ SSE: broadcast msgs                          │
+└─────────┼──────────────────────────────────────────────┘
+          ▼
 ┌─────────────────────────────────────────────────────────┐
-│  FastAPI (api/app/main.py)                              │
-│   • /api/state          → current minute, prices        │
-│   • /api/events (SSE)   → broadcast messages            │
-│   • /api/chat (POST)    → single-turn Q&A               │
-│   • Replay clock: 6s real-time = 1 match-minute         │
-└──────────┬──────────────────────────────────┬───────────┘
-           │ on event                         │ on user msg
-           ▼                                  ▼
-┌─────────────────────────────────────────────────────────┐
-│  RocketRide pipeline (api/app/pipelines/edgecast.pipe)  │
+│  agent_io_server.py — single Python process (port 8765) │
 │                                                         │
-│   chat_source ─► agent_rocketride                       │
-│                    │                                    │
-│                    ├─► llm_gmi_cloud                    │
-│                    │    profile: custom                 │
-│                    │    model:   google/gemini-3.5-flash│
-│                    │                                    │
-│                    ├─► memory_internal                  │
-│                    │                                    │
-│                    ├─► tool_python (market_state_lookup)│
-│                    │                                    │
-│                    └─► vectordb_postgres                │
-│                         ▲                               │
-│                         │ embedded queries              │
-│                         └─ embedding_transformer (local)│
+│  Background tick loop  (every EDGECAST_TICK_SECONDS):   │
+│   build_tick_payload(now, last_tick)                    │
+│     • match_minute, since_minute, lookback_min          │
+│     • new_key_events    (key_events.json windowed)      │
+│     • new_commentary    (commentary.json windowed)      │
+│     • polymarket_top_movers   (top-5 by abs delta_c)    │
+│   POST → RocketRide webhook (test.pipe)                 │
+│                                                         │
+│  HTTP endpoints (called by agent via tool_http_request):│
+│   GET  /market/{market_id}/window?start_min&end_min&agg │
+│        → market_state_lookup (raw|delta|range)          │
+│   GET  /events_window?start_min&end_min&kind&key_only   │
+│        → events_commentary_lookup (both | events | …)   │
+│   GET  /markets    → market_id ↔ question index         │
+│   POST /replay/{seek,start}  → demo clock control       │
+│   GET  /health                                          │
+│                                                         │
+│  Reads:  data/matches/<id>/{meta,key_events,commentary, │
+│                              markets}.json              │
+│          data/matches/<id>/prices/<token_id>.json       │
+└──────────┬──────────────────────────────────────────────┘
+           │ POST every TICK_SECONDS
+           ▼
+┌─────────────────────────────────────────────────────────┐
+│  RocketRide pipeline (test.pipe)                        │
+│                                                         │
+│   webhook ─► agent_deepagent ─► response_answers        │
+│                  │                                      │
+│                  ├─► llm_gmi_cloud                      │
+│                  │    profile: custom (Gemini 3.5 Flash)│
+│                  │                                      │
+│                  ├─► tool_http_request                  │
+│                  │    urlWhitelist: localhost:8765      │
+│                  │    (calls the lookup endpoints above)│
+│                  │                                      │
+│                  └─► tool_exa_search                    │
+│                       (player / team breaking-news)     │
 └─────────────────────────────────────────────────────────┘
 ```
+
+### Key design decisions (why this shape)
+
+- **Periodic, not event-driven.** Every tick the agent re-evaluates the
+  world; silence is a valid output. Avoids enumerating event types
+  upstream and matches the cron model the team asked for.
+- **`tool_python` rejected, HTTP instead.** RocketRide's `tool_python`
+  runs in a RestrictedPython sandbox with no filesystem or network
+  access (`rocketride-server/nodes/src/nodes/tool_python/README.md:49`).
+  Cannot read `data/matches/`. Solution: expose the lookup functions
+  as a local FastAPI; agent reaches them with the `tool_http_request`
+  it already had.
+- **Files-on-disk are the store.** No DB, no vector index. The
+  fresh-window payload is what the agent sees by default; the two
+  lookup endpoints let it pull any wider window from the same JSON.
+- **Replay clock lives in `agent_io_server`.** `POST /replay/start?
+  from_minute=70` anchors the clock; tick loop + lookups all read
+  through `current_match_minute()`. Wall-clock would put us in May
+  2026 with a match that happened April 19.
 
 ---
 
 ## Repository layout
 
 ```text
-world-cup-hack-2026/
-├── api/                          # FastAPI + RocketRide (Tracks B + C)
-│   ├── app/
-│   │   ├── main.py               # FastAPI app, SSE, /api/chat
-│   │   ├── replay.py             # Clock ticker, event scheduler
-│   │   ├── pipelines/
-│   │   │   └── edgecast.pipe     # Single-agent RocketRide pipeline
-│   │   ├── prompts/
-│   │   │   ├── movement_alert.txt
-│   │   │   ├── state_summary.txt
-│   │   │   └── chat_qa.txt
-│   │   ├── fallbacks.py          # Deterministic templates
-│   │   └── corpus_loader.py      # One-time ingest of facts.jsonl into pgvector
-│   ├── data/
-│   │   └── facts.jsonl           # Historical fact snippets, one JSON per line
-│   └── pyproject.toml
-├── ui/                           # Vite + React (Track A)
-│   ├── src/
-│   │   ├── App.tsx               # 3-pane layout
-│   │   ├── ChatPane.tsx
-│   │   ├── ClockPane.tsx
-│   │   └── MarketsPane.tsx
-│   └── package.json
-├── demo-data/                    # Static seed data (Track B)
-│   ├── match.json                # Timeline, events
-│   ├── markets.json              # 8-12 markets + opening prices
-│   ├── price-curves.json         # Per-minute price points
-│   └── commentary.json           # Minute-by-minute text
-├── .env                          # NOT committed (gitignored)
+gmi-io/
+├── test.pipe                     # RocketRide pipeline (Track C)
+├── scripts/
+│   ├── agent_io_server.py        # FastAPI: tick loop + lookup endpoints + replay clock
+│   ├── tools/
+│   │   ├── match_helpers.py      # Shared: kickoff, minute↔ts, market index, cents
+│   │   ├── market_state_lookup.py    # Polymarket window queries
+│   │   └── events_commentary_lookup.py  # Events + commentary window queries
+│   └── providers/                # One-time data pull (already run)
+│       ├── espn.py               # ESPN events + commentary
+│       └── polymarket.py         # Gamma (markets) + CLOB (price history)
+├── data/matches/<id>/            # Seeded once, read by agent_io_server
+│   ├── meta.json                 # short_id, kickoff_utc, teams
+│   ├── markets.json              # 37 markets across 5 sibling events
+│   ├── key_events.json           # In-game events (goal, card, sub, …)
+│   ├── commentary.json           # Minute-by-minute commentary
+│   └── prices/<token_id>.json    # Price history per outcome token
+├── ui/                           # Vite + React (Track A — separate dir)
+├── .env                          # NOT committed
 ├── .env.example                  # Committed, no real values
-└── README.md
+└── SPEC.md                       # This file
 ```
+
+### Application server (Track B) — separate from the pipeline
+
+Track B's FastAPI is a **separate process** from `agent_io_server`. It owns
+the browser-facing SSE and `/api/chat`. `agent_io_server` owns the agent's
+view of the world (ticks + lookups). They can run side by side; in a tight
+hackathon they can be merged into one app if Track B prefers.
 
 ### `.env.example` (committed)
 
 ```bash
 # GMI Cloud API - smoke target: google/gemini-3.5-flash at https://api.gmi-serving.com/v1
 GMI_API_KEY=
+# Same key, ROCKETRIDE_-prefixed so it interpolates into .pipe files.
+ROCKETRIDE_GMI_API_KEY=
 
-# Postgres for vector store (pgvector extension required)
-PGVECTOR_HOST=localhost
-PGVECTOR_PORT=5432
-PGVECTOR_USER=postgres
-PGVECTOR_PASSWORD=
-PGVECTOR_DB=edgecast
+# EdgeCast agent IO server (scripts/agent_io_server.py)
+EDGECAST_MATCH_ID=ars-man-2026-04-19
+EDGECAST_TICK_SECONDS=60
+EDGECAST_LOOKBACK_MIN=5
+EDGECAST_TOP_MOVERS=5
+EDGECAST_TICK_ENABLED=1
+EDGECAST_WEBHOOK_URL=http://localhost:8080/api/pipelines/test.pipe/webhook
 ```
 
 ---
 
-## Demo scenario (locked timeline — 10 match-minutes = 60s real)
+## Demo scenario — Man City vs Arsenal, 2026-04-19
 
-| Match minute | Real time | Event | Agent does |
-| --- | --- | --- | --- |
-| 75' | t=0s | Calm baseline | Quiet sidebar, last state_summary visible |
-| 77' | t=12s | France corner #3 in 4 min | `movement_alert`: corners O9.5 ticks up; vector adds: "France averages 7 corners per knockout match" |
-| 78' | t=18s | state_summary tick | Quick summary |
-| 80' | t=30s | **GOAL — France (Mbappé equalizer)** | Big `movement_alert`: 3 markets cited; vector adds: "Mbappé has scored in 4 of his last 5 knockout-round appearances" |
-| 82' | t=42s | French shot saved | Small `movement_alert`: shots O14.5 +5c |
-| 85' | t=60s | Yellow card — Argentina | `movement_alert`: cards O4.5, France winner; vector adds: "Otamendi averages 1 card every 2 high-stakes matches" |
-| 87' | t=72s | (presenter types question) | `chat_qa`: live answer using vector + state context |
-| 90' | t=90s | Wrap | Final `state_summary` if time |
+Real data, not hand-authored. The match was 1-1 at half, City scored to make
+it 2-1, then a late period. Demo seeks via `POST /replay/start?from_minute=N`
+and the tick loop fires every `TICK_SECONDS`. Observed payload behavior at
+key minutes (smoke-tested):
 
-**Markets in play (12, in `markets.json`):** Match winner (Arg/Fra/Draw), Both teams to score, Total goals O2.5/O3.5, Goes to extra time, Next goal scorer (5 names), Corners O9.5, Yellow cards O4.5, Mbappé to score, Messi to score, Exact score 2-1.
-
----
-
-## Historical fact corpus
-
-### Shape — `api/data/facts.jsonl`
-
-One JSON object per line:
-
-```json
-{"id": "mbappe_knockout_record", "category": "player", "subject": "Mbappé",
- "text": "Mbappé has scored in 4 of his last 5 World Cup knockout-round appearances, with 3 of those goals coming after the 70th minute."}
-```
-
-### Authoring guidelines (~30-40 snippets total)
-
-| Bucket | Count | Examples |
+| Match minute | Tick payload signal | What the agent should broadcast |
 | --- | --- | --- |
-| Player profiles (Mbappé, Messi, Griezmann, Otamendi, Di María) | 10 | "Mbappé has scored 3 of his career goals from counter-attacks after the 80th minute." |
-| Team tactical tendencies (France, Argentina) | 8 | "France has equalized in 3 of their last 6 knockout matches when trailing by 1 in the final 15 min." |
-| Matchup history (head-to-head, prior finals) | 6 | "France and Argentina have met 12 times; Argentina leads 6-3-3." |
-| Statistical priors (corner/card rates, goal timing) | 6 | "In World Cup knockout matches, the average yellow-card count is 4.2." |
-| Referee / context | 4 | "Referees averaging 5+ cards/match book defenders earlier than midfielders." |
+| 45' (halftime) | `halftime` event + Arsenal substitution; **"Exact 2-1" +39c, "Exact 1-1" −38c, "Arsenal leading at HT" −34c** | Big alert — the market already priced in a second-half City goal |
+| 75' | Two Arsenal subs in commentary; **corners O/U 9.5 +16c** | Mid alert — late-game pressure on corners |
+| 0-45' baseline | Ordinary fouls + corners, market deltas <5c | Silent (gate works) |
 
-### Ingest path
-
-1. Author `facts.jsonl` (Track C, 45 min)
-2. `corpus_loader.py` reads jsonl, runs each through `embedding_transformer`, inserts into Postgres table `fact_vectors`
-3. Runs once at server startup; idempotent (`ON CONFLICT (id) DO NOTHING`)
-
-### How the agent uses it
-
-On each event, the broadcast loop builds a query like `"goal by Mbappé in 80th minute"` → vector lookup top 2 facts → injects into the LLM prompt as `<historical_context>...</historical_context>`. Chat path does the same with top 3 on the user's question text.
+**Markets in play (37 in `data/matches/<id>/markets.json`):** 5 sibling
+Polymarket events — main 3-way moneyline + spreads/totals/BTTS, halftime
+moneyline, exact-score grid (~24 cells), and total-corners O/U at multiple
+thresholds. Each market has 2 outcome tokens; the lookup reads the "Yes"
+token by default.
 
 ---
 
-## The RocketRide pipeline — `edgecast.pipe`
+## Historical context — DEFERRED in v1
 
-> **Custom profile schema** verified against `rocketride-server/nodes/src/nodes/llm_gmi_cloud/services.json`. The Custom profile requires `model`, `modelTotalTokens`, `serverbase`, `apikey`.
+The original SPEC called for a 30-40 snippet `facts.jsonl` corpus indexed
+in pgvector. **This is cut from v1.** The agent reasons over:
 
-```json
-{
-  "components": [
-    {
-      "id": "chat_1",
-      "provider": "chat",
-      "config": { "mode": "Source", "type": "chat" }
-    },
-    {
-      "id": "agent_1",
-      "provider": "agent_rocketride",
-      "config": {
-        "instructions": [
-          "You are EdgeCast, a live prediction-market analyst. ",
-          "When given an event, produce ONE trader-terse broadcast alert. ",
-          "When given a user question, answer in 3-5 sentences using current state and recent events. ",
-          "Use the <historical_context> block when it adds insight. ",
-          "Never recommend bets. Never predict outcomes. Cap responses at 200 tokens."
-        ],
-        "max_waves": 4
-      },
-      "input": [{ "lane": "questions", "from": "chat_1" }]
-    },
-    {
-      "id": "llm_1",
-      "provider": "llm_gmi_cloud",
-      "config": {
-        "profile": "custom",
-        "custom": {
-          "model": "google/gemini-3.5-flash",
-          "modelTotalTokens": 128000,
-          "serverbase": "https://api.gmi-serving.com/v1",
-          "apikey": "${GMI_API_KEY}"
-        }
-      },
-      "control": [{ "classType": "llm", "from": "agent_1" }]
-    },
-    {
-      "id": "mem_1",
-      "provider": "memory_internal",
-      "config": { "type": "memory_internal" },
-      "control": [{ "classType": "memory", "from": "agent_1" }]
-    },
-    {
-      "id": "tool_market_1",
-      "provider": "tool_python",
-      "config": { "type": "tool_python" },
-      "control": [{ "classType": "tool", "from": "agent_1" }]
-    },
-    {
-      "id": "embed_local",
-      "provider": "embedding_transformer",
-      "config": { "profile": "all-minilm-l6-v2" }
-    },
-    {
-      "id": "vector_store",
-      "provider": "vectordb_postgres",
-      "config": {
-        "host":     "${PGVECTOR_HOST}",
-        "port":     5432,
-        "user":     "${PGVECTOR_USER}",
-        "password": "${PGVECTOR_PASSWORD}",
-        "database": "${PGVECTOR_DB}",
-        "table":    "fact_vectors",
-        "similarity_metric": "cosine",
-        "retrieval_score":    0.5
-      },
-      "control": [{ "classType": "tool", "from": "agent_1" }],
-      "input":   [{ "lane": "questions", "from": "embed_local" }]
-    }
-  ]
-}
-```
+1. The fresh-window tick payload (everything new since `now - 5min`).
+2. `market_state_lookup` for deeper polymarket history.
+3. `events_commentary_lookup` for deeper match history.
+4. `tool_exa_search` for player/team breaking news (kept on the broadcast
+   path — known latency risk, but accepted; see Risks).
 
-**Why Custom profile, not a built-in one:** `gemini-3.5-flash` is not in GMI Cloud's profile dropdown (the built-ins are `gemini-3-pro` and `gemini-3-flash`). Custom takes any model the GMI endpoint serves; the direct smoke command below is the verifier before `/api/chat` wiring.
+If time allows post-demo, the fact corpus can be re-added without
+restructuring: add `embedding_transformer` + `vectordb_postgres` nodes
+back into `test.pipe` and write a one-shot `corpus_loader.py`.
+
+---
+
+## The RocketRide pipeline — `test.pipe`
+
+Live in `test.pipe` at repo root. Nodes (read the file for full config):
+
+| Node | Provider | Role |
+| --- | --- | --- |
+| `webhook_1` | `webhook` | Source. Receives tick payloads from `agent_io_server`. |
+| `agent_deepagent_1` | `agent_deepagent` | The agent. Input lane: `questions` from `webhook_1`. |
+| `llm_gmi_cloud_1` | `llm_gmi_cloud` | Profile `gemini-3-flash` (built-in, not Custom — see note). API key via `${ROCKETRIDE_GMI_API_KEY}`. |
+| `tool_http_request_1` | `tool_http_request` | Whitelisted to `http://localhost:8765`. Agent uses this to call `/market/{id}/window`, `/events_window`, `/markets`. |
+| `tool_exa_search_1` | `tool_exa_search` | Player/team breaking-news lookup. |
+| `response_answers_1` | `response_answers` | Terminal node returning the agent's broadcast. |
+
+**Divergences from the original SPEC draft (v3):**
+
+- `chat` source → `webhook` source: webhook accepts the structured tick
+  payload as JSON; `chat` is for free-text questions.
+- `agent_rocketride` → `agent_deepagent`: deepagent is what the GMI fork
+  ships; deepagent has no memory port, which is fine because cross-event
+  recall lives in the tick payload + lookup tools, not in `memory_internal`.
+- `tool_python` (market_state_lookup) → `tool_http_request` calling
+  `agent_io_server` endpoints. The python sandbox cannot read `data/`.
+- `vectordb_postgres` + `embedding_transformer` removed (corpus deferred).
+- Custom-profile Gemini 3.5 Flash → built-in `gemini-3-flash` profile.
+  Reduces config surface; revert to Custom if 3.5 is required for judging.
+
+**Env var interpolation:** `${GMI_API_KEY}` does NOT interpolate — RocketRide
+only substitutes `${ROCKETRIDE_*}`-prefixed vars in `.pipe` files (per
+`ROCKETRIDE_COMPONENT_REFERENCE.md`). Set both `GMI_API_KEY` and
+`ROCKETRIDE_GMI_API_KEY` to the same value in `.env`.
 
 ### Direct GMI smoke test
 
@@ -349,18 +327,43 @@ RULES: same as movement_alert. 200 tokens max.
 You are EdgeCast answering a single user question.
 
 CONTEXT:
-- Current minute, all 12 markets with price + 5-min delta
-- Last 5 events, last 5 broadcast messages
-- historical_context: top 3 relevant facts from the vector store
+- Current minute, all markets with price + 5-min delta (from the tick payload)
+- Recent events + commentary (from the tick payload)
+- Optional: deeper history via `tool_http_request` GET /events_window or
+  /market/{id}/window
+- Optional: external player/team info via `tool_exa_search`
 
 RULES:
 - One-shot. No clarifying questions.
 - 3-5 sentences max. Cite specific prices when relevant.
-- Cite ≤1 historical fact when it adds insight; don't force it.
 - Refusals (exact wording):
   · "place a bet" / "should I buy" / "should I cash out" → "EdgeCast watches markets — it doesn't place orders."
   · "what will happen" / "predict" → "I can show you what's moving, not what will happen."
 - Trader-terse. 200 tokens max.
+```
+
+### Tick prompt (per-broadcast)
+
+This lives in `build_tick_payload` (`scripts/agent_io_server.py`) as the
+`hint` field, attached to each tick payload. Move it into
+`agent_deepagent_1.config.instructions` once the wording stabilizes:
+
+```text
+You are EdgeCast. Each tick you receive:
+  match_id, match_minute, since_minute, lookback_min,
+  new_key_events, new_commentary, polymarket_top_movers.
+
+If anything is broadcast-worthy (a goal, card, sub, or market move ≥5c),
+produce ONE trader-terse alert. Otherwise return an empty string.
+
+Tools (call only when the tick payload is insufficient):
+  - tool_http_request GET http://localhost:8765/market/{market_id}/window
+      ?start_min=&end_min=&agg=raw|delta|range
+  - tool_http_request GET http://localhost:8765/events_window
+      ?start_min=&end_min=&kind=both|events|commentary
+  - tool_exa_search for player/team breaking news
+
+Prices in integer cents. 200 tokens max. Never recommend bets, never predict.
 ```
 
 ---
@@ -393,52 +396,22 @@ def chat_qa_fallback(question):
 
 ---
 
-## Demo data — `demo-data/*.json` (Track B)
+## Demo data — `data/matches/<id>/*.json` (Track B already done)
 
-### `match.json`
+Real data pulled from ESPN + Polymarket via `scripts/providers/`. One match
+seeded so far: `ars-man-2026-04-19` (Manchester City vs Arsenal, Premier
+League, finished 2-1 City).
 
-```json
-{
-  "id": "demo-match-1",
-  "title": "France vs Argentina (Demo)",
-  "start_minute": 75,
-  "end_minute": 90,
-  "tick_seconds_per_minute": 6,
-  "events": [
-    {"minute": 77, "type": "corner", "team": "France", "description": "France's third corner in four minutes"},
-    {"minute": 80, "type": "goal", "team": "France", "player": "Mbappé", "description": "Equalizer, 2-2"},
-    {"minute": 82, "type": "shot_saved", "team": "France", "player": "Griezmann"},
-    {"minute": 85, "type": "yellow_card", "team": "Argentina", "player": "Otamendi"}
-  ],
-  "state_summary_minutes": [78, 90]
-}
-```
+| File | Shape | Notes |
+| --- | --- | --- |
+| `meta.json` | `{short_id, home, away, kickoff_utc, polymarket_event_slug, espn_game_id}` | Used by `match_helpers.kickoff()` for minute↔ts conversion. |
+| `markets.json` | List of 37 markets. Each: `{market_id, question, outcomes[], token_ids[], sports_market_type, metadata}` | 5 Polymarket sibling events: moneyline, halftime, exact-score, totals, corners. |
+| `key_events.json` | List. Each: `{type:{type, text}, clock:{value:seconds}, text, wallclock}` | 19 events. `clock.value` is **seconds**, divide by 60 for match-minute. |
+| `commentary.json` | List. Each: `{minute, text, ts_utc, raw_event_type, players, team}` | 96 entries, minute 0-90. |
+| `events.json` | Polymarket *event-group* metadata (the betting event, not match events). | Generally not used by the agent. |
+| `prices/<token_id>.json` | `{token_id, market_id, outcome, question, windows:{pre_match,in_match}, points:[{ts_utc, price}]}` | 74 token files. `points` is the full pre+in-match curve sorted by `ts_utc`. `windows.in_match.point_count` is metadata, NOT a separate array. |
 
-### `markets.json` (12 entries)
-
-Each: `{id, name, category}`. Categories: `outcome | goals | events | player | score`.
-
-### `price-curves.json`
-
-Per market, list of `{minute, price_cents}` points. Hand-author so the jumps line up with event minutes:
-
-- `match_winner_fra`: 28c → 41c (jumps at 80')
-- `extra_time`: 19c → 34c (jumps at 80')
-- `goals_o35`: 22c → 35c (jumps at 80')
-- `corners_o95`: 18c → 27c (climbs 76'–78')
-- `cards_o45`: 31c → 38c (jumps at 85')
-- Most others stay flat — that's intentional, the sidebar's value is showing the few that move.
-
-### `commentary.json`
-
-```json
-{
-  "75": "France in possession in their own half.",
-  "76": "Argentina pressing high, intercepts on halfway.",
-  "77": "Corner for France — third in four minutes. Pressure mounting.",
-  "...": "..."
-}
-```
+To seed another match: run `scripts/seed_match.py` with a new slug.
 
 ---
 
@@ -472,56 +445,60 @@ Per market, list of `{minute, price_cents}` points. Hand-author so the jumps lin
 
 ---
 
-## Track C — RocketRide pipeline, vector store, corpus, prompts (pratikm778)
+## Track C — RocketRide pipeline + agent IO server + prompts (pratikm778)
 
-| # | Item | File(s) | Done when | Est |
-| --- | --- | --- | --- | --- |
-| C1 | Install RocketRide VS Code extension; deploy "Local" server | (IDE) | Extension running, can open a `.pipe` file | 15m |
-| C2 | Stand up Postgres + pgvector locally; create `edgecast` DB + `vector` extension | (local) | `psql -c "CREATE EXTENSION vector;"` returns OK; creds in `.env` | 25m |
-| C3 | Author `edgecast.pipe` per JSON above; verify it loads in canvas | `edgecast.pipe` | All 7 nodes render, no validation errors | 25m |
-| C4 | Smoke test via IDE chat using GMI key from `.env` | (IDE chat) | Test message returns Gemini 3.5 Flash response within 5s | 15m |
-| C5 | Author `data/facts.jsonl` (30-40 snippets per buckets above) | `facts.jsonl` | File has 30+ lines, each ≤3 sentences, JSONL valid | 45m |
-| C6 | `corpus_loader.py` — runs facts through `embedding_transformer`, inserts into pgvector | `corpus_loader.py` | One run populates `fact_vectors`; idempotent | 30m |
-| C7 | Vector tool wiring: agent → vectordb_postgres returns top-K on query | (IDE) | Sending "Mbappé scored" via the agent surfaces the Mbappé fact in context | 20m |
-| C8 | Write & tune all 3 system prompts against 3 test inputs each | `prompts/*.txt` | Each prompt produces in-spec output on 3 hand-crafted test inputs | 40m |
-| C9 | Refusal-rail verification — both "bet" and "predict" triggers fire | (IDE chat) | Both refusal messages reproduce verbatim from `chat_qa.txt` | 10m |
+Reflects the actual built state. Postgres/vector items removed (deferred);
+agent IO server replaces them. Items marked ✅ already shipped.
 
-**Track C total: ~3h 45m.** Heavier than A and B. **Squeeze candidates: C5 → cut to 20 snippets if running long; C8 → tune 2 prompts deeply, accept fallback for state_summary.**
+| # | Item | File(s) | Done when | Est | Status |
+| --- | --- | --- | --- | --- | --- |
+| C1 | Install RocketRide VS Code extension; deploy "Local" server | (IDE) | Extension running, can open `test.pipe` | 15m | ✅ |
+| C2 | Author `test.pipe`: webhook → agent_deepagent → llm_gmi_cloud + tool_http_request + tool_exa_search → response_answers | `test.pipe` | All nodes render in canvas, no validation errors | 25m | ✅ |
+| C3 | Smoke test via IDE chat using `${ROCKETRIDE_GMI_API_KEY}` from `.env` | (IDE chat) | Test message returns Gemini response within 5s | 15m | ⏳ |
+| C4 | Implement `scripts/tools/{market_state_lookup,events_commentary_lookup,match_helpers}.py` | `scripts/tools/` | `python -c "from scripts.tools…"` smoke passes | 30m | ✅ |
+| C5 | Build `agent_io_server.py`: tick loop + lookup endpoints + replay clock | `scripts/agent_io_server.py` | `uvicorn` runs; `/health` ok; replay seek works | 45m | ✅ |
+| C6 | End-to-end test: start agent_io_server → start replay at 70' → confirm RocketRide receives tick payloads and agent emits broadcasts | (manual) | At least 3 sequential ticks produce sensible output | 25m | ⏳ |
+| C7 | Author `agent_deepagent_1.config.instructions` (tick prompt + chat prompt + refusal rails) | `test.pipe` | Agent stays silent on quiet ticks; broadcasts on score change; refuses "should I buy?" | 40m | ⏳ |
+| C8 | Wire Track B's `/api/events` SSE consumer to RocketRide responses | (Track B side) | Browser SSE receives broadcasts produced by ticks | 15m | ⏳ |
 
----
-
-## Schedule (3 people parallel)
-
-| Time | Track A (Sajay) | Track B (Kaushik) | Track C (Pratik) | Joint |
-| --- | --- | --- | --- | --- |
-| 2:15–2:45 | A1 scaffold UI | B1 scaffold API + B2 seed data starts | C1 RR install + C2 Postgres+pgvector | — |
-| 2:45–3:15 | A2 grid + A3 starts | B2 seed data finishes | C3 author .pipe + C4 smoke test | — |
-| 3:15–3:45 | A3 clock+commentary | B3 replay clock | C5 corpus authoring | — |
-| 3:45–4:15 | A4 markets sidebar | B4 SSE stream | C6 corpus loader + C7 vector wiring | — |
-| 4:15–4:35 | A5 chat pane SSE+POST | B5 /api/chat | C8 prompts | — |
-| 4:35–4:50 | A6 polish | B6 fallbacks | C8 + C9 refusal | **End-to-end smoke** |
-| 4:50–5:00 | — | — | — | **1 dress rehearsal + final commit + push** |
-
-Wall-clock: **2h 45m**. Per-track loads (A=3h10m, B=2h45m, C=3h45m) — C is the bottleneck; explicit squeeze items handle that.
+**Track C remaining: ~95m.** Squeeze: C8 can be cut if Track B integrates
+directly with `response_answers` output instead of waiting on RocketRide.
 
 ---
 
-## Demo script (90 seconds — practice between 4:50 and 5:00)
+## Remaining wall-clock to 5:00 PM
+
+Schedule re-baselined; v3 schedule kept only for reference in commit history.
+Right now:
+
+| Track | Remaining critical-path |
+| --- | --- |
+| C (Pratik) | IDE smoke (C3) → end-to-end ticks (C6) → instructions prompt (C7). |
+| B (Kaushik) | `/api/events` SSE bridging to `response_answers_1` so the UI sees broadcasts. |
+| A (Sajay) | Connect SSE consumer to the new event stream; minimal polish. |
+
+Joint end-to-end smoke + dress rehearsal in the last 10 minutes.
+
+---
+
+## Demo script (90 seconds — Man City vs Arsenal, 2026-04-19)
 
 **0:00–0:10 — Frame**
-"Sports prediction markets move faster than human attention. During a soccer match there can be 200+ live markets. We watch them all, and we add the historical context a sharp human would already know."
+"Sports prediction markets move faster than human attention. During a soccer match there can be 200+ live markets across a single game. We watch every one of them and decide what's worth telling you."
 
-**0:10–0:30 — Calm**
-"Minute 75. Argentina up 2-1. The agent is quiet. Last status: nothing moving. That's correct."
+**0:10–0:25 — Quiet baseline**
+[`POST /replay/start?from_minute=30`] "Minute 30. Even game, market quiet. The agent is silent — every 60 seconds it looks, sees nothing broadcast-worthy, says nothing. That restraint is the product."
 
-**0:30–1:10 — The spike**
-"Press play." [Events fire at 77', 80', 82', 85'.] "Mbappé equalizes at 80'. Watch: three markets light up. France wins 28→41 cents. Goes to extra time 19→34. Total goals over 3.5: 22→35. **And the agent adds: 'Mbappé has scored in 4 of his last 5 knockout-round appearances.'** That's the vector store pulling historical context the LLM wouldn't have on its own." [Show RocketRide canvas in VS Code for 2 seconds.] "One pipeline. RocketRide orchestrating, GMI Cloud serving, Google's Gemini 3.5 Flash thinking. All three sponsors, one API call per event."
+**0:25–1:05 — Halftime cascade**
+[Seek to 45'.] "Halftime arrives. Watch what the market does before the second half even starts: exact-score 2-1 jumps +39c, 1-1 collapses −38c, Arsenal-leading-at-HT drops −34c. The market is already pricing in a City goal. The agent sees all three deltas in one tick payload, picks the headline, and broadcasts."
+[Show the RocketRide canvas for 2 seconds.] "One pipeline. RocketRide orchestrating, GMI Cloud serving Gemini, a local FastAPI feeding the agent its window of the match. The agent can pull deeper history through HTTP tools whenever a tick isn't enough."
 
-**1:10–1:30 — Live chat**
-[Type:] "Why is the corners market moving?" [Agent answers using current state + vector-fetched France-corner stat.] "Live Gemini, on GMI's GPUs, with historical context, in under three seconds."
+**1:05–1:25 — Live chat**
+[Type:] "Why are the corner totals climbing?"
+[Agent calls `/events_window` for 70-75', spots the two Arsenal subs, answers.] "Live Gemini on GMI's GPUs, reasoning over real Polymarket data and real ESPN commentary, in under three seconds."
 
-**1:30 — Close**
-"Today, one match, twelve markets, thirty facts. Point the pipeline at any match, any sport, any prediction market. That's the product."
+**1:25 — Close**
+"Today, one match, thirty-seven markets, seventy-four price curves. Point the same pipeline at any match, any sport, any prediction market. That's the product."
 
 ---
 
@@ -531,11 +508,10 @@ Wall-clock: **2h 45m**. Per-track loads (A=3h10m, B=2h45m, C=3h45m) — C is the
 - "I bet on X" buttons / order entry / cash-out suggestions
 - Pre-event flags / "agent saw it coming" pre-predictions
 - Fine-tuned classifier on GMI
-- Embeddings via external API (we use local `embedding_transformer`)
+- **Vector store + fact corpus (deferred to v2)**
 - A second LLM node (single-LLM via GMI does it all)
-- Real Polymarket data / scraping
-- Real match commentary scraping
-- Multi-match support
+- Live polymarket scraping during demo (data was pulled once via providers)
+- Multi-match support (architecture supports it, demo runs one match)
 - User accounts / auth / persistence beyond match-time state
 - "Why?" trace panel (show the RocketRide canvas live instead)
 - Mobile responsive / dark mode polish
@@ -547,28 +523,42 @@ Wall-clock: **2h 45m**. Per-track loads (A=3h10m, B=2h45m, C=3h45m) — C is the
 
 | Risk | Likelihood | Mitigation |
 | --- | --- | --- |
-| Postgres+pgvector install drags past 2:50 PM | Med | Fallback to in-memory cosine sim in `tool_python`. Decide at 2:50 if not green. |
-| `google/gemini-3.5-flash` becomes unavailable on GMI mid-demo | Low | Switch model string to `google/gemini-3-flash-preview` (built-in profile) — same node, no other changes. |
-| Custom-profile `serverbase`/`apikey` keys don't interpolate `${GMI_API_KEY}` correctly | Med | If `${...}` interpolation isn't supported in the .pipe file, hard-code the env var read in a tiny Python wrapper for the agent's tool path. |
-| Live LLM call >5s | Low | 5s timeout + fallback templates. Per-event fallbacks pre-written. |
-| Live chat in demo gets bad answer in Q&A | High | Demo uses one rehearsed question. Don't take ad-hoc Q&A during the 3-min demo — save those for the 2-min Q&A. |
+| `${ROCKETRIDE_GMI_API_KEY}` doesn't interpolate at runtime | Med | Hard-paste the key during build (kept off git via `.env`), refactor before commit. Three spots in `test.pipe`. |
+| `agent_deepagent` ignores `tool_http_request` because schema differs | Med | Verify in IDE: send a tick payload, watch trace for HTTP calls. If broken, fall back to inlining last-5-min payload only; lookups become non-functional but base broadcasts still work. |
+| `tool_http_request` latency to `localhost:8765` blows the 5s budget | Low | Endpoints are pure file reads, <50ms. Cache-warm on first call. |
+| Agent calls Exa on every broadcast tick → 2-3s extra latency | Med | Tighten prompt to "only call Exa for chat questions, not ticks". |
+| Wall-clock leaks into demo (forgot to `/replay/start`) | Med | Add a startup banner check; `EDGECAST_FAKE_MINUTE` env var as a belt-and-suspenders default. |
+| `google/gemini-3-flash` becomes unavailable on GMI mid-demo | Low | Switch model string to `gemini-3-pro` (also built-in) — same node, no other changes. |
+| Live LLM call >5s | Low | 5s timeout + fallback templates. |
+| Live chat in demo gets bad answer in Q&A | High | Demo uses one rehearsed question. Don't take ad-hoc Q&A during the 3-min demo. |
 | Venue wifi unreliable | Med | Phone hotspot ready. Backup video recorded by 4:55. |
-| Local network intercepts `api.gmi-serving.com` before TLS | Med on venue wifi | Retry from hotspot or another network. Symptom: `curl: (35) ... wrong version number` on HTTPS, or SafeBrowse redirect on HTTP. |
+| Local network intercepts `api.gmi-serving.com` before TLS | Med on venue wifi | Retry from hotspot. Symptom: `curl: (35) ... wrong version number`. |
 
 ---
 
 ## Naming convention
 
-- Match-time minute as integer (e.g. `80`), never strings or `"80'"`
-- Prices as integer cents in code (`41`); `c` suffix only at UI layer
-- Event types from a fixed enum: `goal | shot_saved | shot_off | yellow_card | red_card | corner | substitution | injury`
-- Broadcast message urgencies: `info | movement | major`
-- Fact category enum: `player | team | matchup | stat | referee`
-- Env var name: **`GMI_API_KEY`** (matches `.env`; do not rename to `GMI_CLOUD_APIKEY`)
+- Match-time minute as **float** (e.g. `80.5` for 80'30"). Tools/payloads
+  accept floats; UI rounds at render time.
+- Prices as integer cents in code (`41`); `c` suffix only at UI layer.
+- Event types passed through from ESPN (`kickoff | goal | yellow-card |
+  substitution | halftime | start-2nd-half | end-regular-time`). Don't
+  re-map.
+- Broadcast message urgencies: `info | movement | major`.
+- Env var names:
+  - `GMI_API_KEY` — application code (curl, Python clients).
+  - `ROCKETRIDE_GMI_API_KEY` — `.pipe` interpolation. Same value.
+  - `EDGECAST_*` — agent_io_server config.
 
 ---
 
-## Open questions still to lock before code
+## Open questions still to lock
 
-- **Postgres credentials**: Pratik chooses local user/pw, writes to `.env`, copies the variable-name shape into `.env.example` (no real values).
-- **Whether `${GMI_API_KEY}` interpolates in .pipe JSON** — verify on first IDE smoke test (C4). If not, hard-paste the key during build (kept off git via `.env`), then refactor before commit.
+- **Does `agent_deepagent` correctly invoke `tool_http_request`?** Verify
+  on the first IDE smoke test. If it doesn't, the lookup tools are
+  unavailable to the agent — fall back to inlining a richer tick payload.
+- **Tick prompt placement.** Currently shipped in `build_tick_payload`'s
+  `hint` field. Move to `agent_deepagent_1.config.instructions` once the
+  wording stabilizes — instructions are stable, tick `hint` is ephemeral.
+- **Whether `${ROCKETRIDE_GMI_API_KEY}` interpolates** — needs smoke test.
+  Fallback: hard-paste during demo, refactor before commit.
