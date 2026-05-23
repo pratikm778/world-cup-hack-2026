@@ -24,7 +24,9 @@
       "closed_time": "2026-04-19 19:42:42+00",
       "start_date": "2026-04-06T04:09:34.741716Z",
       "end_date": "2026-04-19T15:30:00Z",
-      "game_start_time": "2026-04-19 15:30:00+00"
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "moneyline",
+      "event_slug": "epl-mac-ars-2026-04-19"
     }
   },
   {
@@ -52,7 +54,9 @@
       "closed_time": "2026-04-19 20:44:54+00",
       "start_date": "2026-04-06T04:08:16.736098Z",
       "end_date": "2026-04-19T15:30:00Z",
-      "game_start_time": "2026-04-19 15:30:00+00"
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "moneyline",
+      "event_slug": "epl-mac-ars-2026-04-19"
     }
   },
   {
@@ -80,7 +84,1029 @@
       "closed_time": "2026-04-19 20:44:54+00",
       "start_date": "2026-04-06T04:08:18.7146Z",
       "end_date": "2026-04-19T15:30:00Z",
-      "game_start_time": "2026-04-19 15:30:00+00"
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "moneyline",
+      "event_slug": "epl-mac-ars-2026-04-19"
+    }
+  },
+  {
+    "market_id": "1887233",
+    "question": "Spread: Manchester City FC (-1.5)",
+    "outcomes": [
+      "Manchester City FC",
+      "Arsenal FC"
+    ],
+    "token_ids": [
+      "83252113844903417280413693713320897848848037673271131899501005950259035103876",
+      "108736465490617732956204038271630756332268927182080748013124406849718233380355"
+    ],
+    "sports_market_type": "spreads",
+    "event_id": "349154",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-spread-home-1pt5",
+      "group_item_title": "Manchester City FC (-1.5)",
+      "volume": 327278.97267300007,
+      "closed": true,
+      "closed_time": "2026-04-19 20:43:20+00",
+      "start_date": "2026-04-06T05:04:48.762931Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "more-markets",
+      "event_slug": "epl-mac-ars-2026-04-19-more-markets"
+    }
+  },
+  {
+    "market_id": "1887237",
+    "question": "Spread: Arsenal FC (-1.5)",
+    "outcomes": [
+      "Arsenal FC",
+      "Manchester City FC"
+    ],
+    "token_ids": [
+      "13900030299144294714885788287760275480064944311223983203620714352617673537794",
+      "109743545527077442982309623814841668369068867332275033045917216170629435696025"
+    ],
+    "sports_market_type": "spreads",
+    "event_id": "349154",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-spread-away-1pt5",
+      "group_item_title": "Arsenal FC (-1.5)",
+      "volume": 20991.295436,
+      "closed": true,
+      "closed_time": "2026-04-19 20:42:28+00",
+      "start_date": "2026-04-06T05:04:50.707402Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "more-markets",
+      "event_slug": "epl-mac-ars-2026-04-19-more-markets"
+    }
+  },
+  {
+    "market_id": "1887249",
+    "question": "Manchester City FC vs. Arsenal FC: O/U 1.5",
+    "outcomes": [
+      "Over",
+      "Under"
+    ],
+    "token_ids": [
+      "4867506117127196324911497426061349300937146092806555796620000005805849765015",
+      "47741929666689577613146700736243046462738613758298240320356667786072273652826"
+    ],
+    "sports_market_type": "totals",
+    "event_id": "349154",
+    "final_outcome_prices": [
+      1.0,
+      0.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-total-1pt5",
+      "group_item_title": "O/U 1.5",
+      "volume": 224023.0511519999,
+      "closed": true,
+      "closed_time": "2026-04-19 17:51:58+00",
+      "start_date": "2026-04-06T05:06:39.227855Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "more-markets",
+      "event_slug": "epl-mac-ars-2026-04-19-more-markets"
+    }
+  },
+  {
+    "market_id": "1887241",
+    "question": "Spread: Manchester City FC (-2.5)",
+    "outcomes": [
+      "Manchester City FC",
+      "Arsenal FC"
+    ],
+    "token_ids": [
+      "15034988144801533573131877984278093700845731396446737763896370561759133529041",
+      "76643645820239302035240950376980322891302888195272562498027437026481902746298"
+    ],
+    "sports_market_type": "spreads",
+    "event_id": "349154",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-spread-home-2pt5",
+      "group_item_title": "Manchester City FC (-2.5)",
+      "volume": 121293.84439799999,
+      "closed": true,
+      "closed_time": "2026-04-19 20:43:32+00",
+      "start_date": "2026-04-06T05:12:31.914899Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "more-markets",
+      "event_slug": "epl-mac-ars-2026-04-19-more-markets"
+    }
+  },
+  {
+    "market_id": "1887245",
+    "question": "Spread: Arsenal FC (-2.5)",
+    "outcomes": [
+      "Arsenal FC",
+      "Manchester City FC"
+    ],
+    "token_ids": [
+      "31109282892886374625366975398596728293483807804410583188094401091632355886713",
+      "73290156203709716034829117526576837299571983198957395666944594431317259744950"
+    ],
+    "sports_market_type": "spreads",
+    "event_id": "349154",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-spread-away-2pt5",
+      "group_item_title": "Arsenal FC (-2.5)",
+      "volume": 4693.863929000002,
+      "closed": true,
+      "closed_time": "2026-04-19 20:42:28+00",
+      "start_date": "2026-04-06T05:35:26.489175Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "more-markets",
+      "event_slug": "epl-mac-ars-2026-04-19-more-markets"
+    }
+  },
+  {
+    "market_id": "1887253",
+    "question": "Manchester City FC vs. Arsenal FC: O/U 2.5",
+    "outcomes": [
+      "Over",
+      "Under"
+    ],
+    "token_ids": [
+      "75601798350172571161954036307264568785712395661071142830388069794903008555621",
+      "20050745679810322807708062054393981016282985354529567023709415206908505345460"
+    ],
+    "sports_market_type": "totals",
+    "event_id": "349154",
+    "final_outcome_prices": [
+      1.0,
+      0.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-total-2pt5",
+      "group_item_title": "O/U 2.5",
+      "volume": 1085500.9234079989,
+      "closed": true,
+      "closed_time": "2026-04-19 19:48:56+00",
+      "start_date": "2026-04-06T05:15:01.378121Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "more-markets",
+      "event_slug": "epl-mac-ars-2026-04-19-more-markets"
+    }
+  },
+  {
+    "market_id": "1887257",
+    "question": "Manchester City FC vs. Arsenal FC: O/U 3.5",
+    "outcomes": [
+      "Over",
+      "Under"
+    ],
+    "token_ids": [
+      "7172277532490221233602279624811782408284563271977932422114521954571230274486",
+      "69005482384928184166450153422721266731480637092847453778973317022745623852532"
+    ],
+    "sports_market_type": "totals",
+    "event_id": "349154",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-total-3pt5",
+      "group_item_title": "O/U 3.5",
+      "volume": 581190.8926390007,
+      "closed": true,
+      "closed_time": "2026-04-19 20:42:58+00",
+      "start_date": "2026-04-06T05:25:11.023514Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "more-markets",
+      "event_slug": "epl-mac-ars-2026-04-19-more-markets"
+    }
+  },
+  {
+    "market_id": "1887262",
+    "question": "Manchester City FC vs. Arsenal FC: Both Teams to Score",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "35183015659263981220359333031140793253147688921151303376489275240968214960834",
+      "109611460461375887621218739374393216722439153094530682281606817580046580790359"
+    ],
+    "sports_market_type": "both_teams_to_score",
+    "event_id": "349154",
+    "final_outcome_prices": [
+      1.0,
+      0.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-btts",
+      "group_item_title": "Both Teams to Score",
+      "volume": 64219.94535800003,
+      "closed": true,
+      "closed_time": "2026-04-19 18:25:48+00",
+      "start_date": "2026-04-06T05:26:38.174881Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "more-markets",
+      "event_slug": "epl-mac-ars-2026-04-19-more-markets"
+    }
+  },
+  {
+    "market_id": "1887260",
+    "question": "Manchester City FC vs. Arsenal FC: O/U 4.5",
+    "outcomes": [
+      "Over",
+      "Under"
+    ],
+    "token_ids": [
+      "40647846863538810420809211712060550487388692637541165194277098615387670431591",
+      "112766085443190935922849393883967616955462417337498610940305091953625232505703"
+    ],
+    "sports_market_type": "totals",
+    "event_id": "349154",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-total-4pt5",
+      "group_item_title": "O/U 4.5",
+      "volume": 116017.19368699999,
+      "closed": true,
+      "closed_time": "2026-04-19 20:42:56+00",
+      "start_date": "2026-04-06T05:25:25.623235Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "more-markets",
+      "event_slug": "epl-mac-ars-2026-04-19-more-markets"
+    }
+  },
+  {
+    "market_id": "1886866",
+    "question": "Manchester City FC leading at halftime?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "11959590596259391026230890101801227238299100785755188625810341852496853884586",
+      "36996942967483690198669625529237819091806649656748299849439798713941046019001"
+    ],
+    "sports_market_type": "soccer_halftime_result",
+    "event_id": "349064",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-halftime-result-home",
+      "group_item_title": "Manchester City FC",
+      "volume": 5111.122539,
+      "closed": true,
+      "closed_time": "2026-04-19 19:19:42+00",
+      "start_date": "2026-04-06T04:55:04.113691Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "halftime-result",
+      "event_slug": "epl-mac-ars-2026-04-19-halftime-result"
+    }
+  },
+  {
+    "market_id": "1886867",
+    "question": "Manchester City FC vs. Arsenal FC: Draw at halftime?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "27121716935207984630191328925369831072533312011755557692181181760167940353420",
+      "114365378587699133084571202129099744265156428932639163541892416614154704289295"
+    ],
+    "sports_market_type": "soccer_halftime_result",
+    "event_id": "349064",
+    "final_outcome_prices": [
+      1.0,
+      0.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-halftime-result-draw",
+      "group_item_title": "Draw",
+      "volume": 4561.776071,
+      "closed": true,
+      "closed_time": "2026-04-19 19:19:38+00",
+      "start_date": "2026-04-06T04:55:12.117934Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "halftime-result",
+      "event_slug": "epl-mac-ars-2026-04-19-halftime-result"
+    }
+  },
+  {
+    "market_id": "1886868",
+    "question": "Arsenal FC leading at halftime?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "100117739464182244204438691836382701782389297230764655636982215362173467047403",
+      "103322957139016091233307169589997581406959407516799066442439071418363477783238"
+    ],
+    "sports_market_type": "soccer_halftime_result",
+    "event_id": "349064",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-halftime-result-away",
+      "group_item_title": "Arsenal FC",
+      "volume": 4159.313369,
+      "closed": true,
+      "closed_time": "2026-04-19 19:19:40+00",
+      "start_date": "2026-04-06T04:55:15.219223Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "halftime-result",
+      "event_slug": "epl-mac-ars-2026-04-19-halftime-result"
+    }
+  },
+  {
+    "market_id": "1886869",
+    "question": "Exact Score: Manchester City FC 1 - 1 Arsenal FC?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "48955581708343689592351998471545710121714900028122453578335606825496025971141",
+      "47207434379038341378166457641548642767234051428526046496447582950540593433985"
+    ],
+    "sports_market_type": "soccer_exact_score",
+    "event_id": "349065",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-exact-score-1-1",
+      "group_item_title": "Exact Score: 1-1",
+      "volume": 5714.540642000001,
+      "closed": true,
+      "closed_time": "2026-04-19 20:45:50+00",
+      "start_date": "2026-04-06T05:36:05.28348Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "exact-score",
+      "event_slug": "epl-mac-ars-2026-04-19-exact-score"
+    }
+  },
+  {
+    "market_id": "1886870",
+    "question": "Exact Score: Manchester City FC 1 - 0 Arsenal FC?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "79007450802696916927952772231785146051637629307703470606820295019698816860214",
+      "61338200413957794582526874038922665491861745194333782377103869926701734771658"
+    ],
+    "sports_market_type": "soccer_exact_score",
+    "event_id": "349065",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-exact-score-1-0",
+      "group_item_title": "Exact Score: 1-0",
+      "volume": 988.3731639999999,
+      "closed": true,
+      "closed_time": "2026-04-19 20:44:56+00",
+      "start_date": "2026-04-06T05:36:12.529526Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "exact-score",
+      "event_slug": "epl-mac-ars-2026-04-19-exact-score"
+    }
+  },
+  {
+    "market_id": "1886871",
+    "question": "Exact Score: Manchester City FC 2 - 1 Arsenal FC?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "98166065190637584159242526760635098151649794116495102272125802506077312019415",
+      "73473077287179610510826615983162545540120748647878689501740371527208141065747"
+    ],
+    "sports_market_type": "soccer_exact_score",
+    "event_id": "349065",
+    "final_outcome_prices": [
+      1.0,
+      0.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-exact-score-2-1",
+      "group_item_title": "Exact Score: 2-1",
+      "volume": 8055.888388999996,
+      "closed": true,
+      "closed_time": "2026-04-19 20:45:54+00",
+      "start_date": "2026-04-06T05:36:25.608557Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "exact-score",
+      "event_slug": "epl-mac-ars-2026-04-19-exact-score"
+    }
+  },
+  {
+    "market_id": "1886872",
+    "question": "Exact Score: Manchester City FC 1 - 2 Arsenal FC?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "115431927190644808598467270202543016473191056435565952663679277620447194612950",
+      "73360498842465347596799535905652285033728227788692553826830402019549235133141"
+    ],
+    "sports_market_type": "soccer_exact_score",
+    "event_id": "349065",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-exact-score-1-2",
+      "group_item_title": "Exact Score: 1-2",
+      "volume": 3941.156786000002,
+      "closed": true,
+      "closed_time": "2026-04-19 20:48:00+00",
+      "start_date": "2026-04-06T05:36:29.632242Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "exact-score",
+      "event_slug": "epl-mac-ars-2026-04-19-exact-score"
+    }
+  },
+  {
+    "market_id": "1886873",
+    "question": "Exact Score: Manchester City FC 2 - 0 Arsenal FC?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "85112438095270182528292613534171379210562398870065479118509334943453881109326",
+      "70331130891047266043573888091261115659997796284495012922849819141747650476755"
+    ],
+    "sports_market_type": "soccer_exact_score",
+    "event_id": "349065",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-exact-score-2-0",
+      "group_item_title": "Exact Score: 2-0",
+      "volume": 3799.9890720000008,
+      "closed": true,
+      "closed_time": "2026-04-19 20:45:58+00",
+      "start_date": "2026-04-06T05:36:35.473178Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "exact-score",
+      "event_slug": "epl-mac-ars-2026-04-19-exact-score"
+    }
+  },
+  {
+    "market_id": "1886874",
+    "question": "Exact Score: Manchester City FC 0 - 1 Arsenal FC?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "82286962054421340653411327649577764491818948516197625528041175858108315687677",
+      "9433269147382999322912660986588093092376093964445120838219682183467905295403"
+    ],
+    "sports_market_type": "soccer_exact_score",
+    "event_id": "349065",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-exact-score-0-1",
+      "group_item_title": "Exact Score: 0-1",
+      "volume": 8462.735394,
+      "closed": true,
+      "closed_time": "2026-04-19 20:46:56+00",
+      "start_date": "2026-04-06T05:36:46.597874Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "exact-score",
+      "event_slug": "epl-mac-ars-2026-04-19-exact-score"
+    }
+  },
+  {
+    "market_id": "1886875",
+    "question": "Exact Score: Manchester City FC 0 - 0 Arsenal FC?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "74251120593380858595112548795372262264194870616506102452847221319891116117584",
+      "43058711865720530617458198979478294070172858869286228261157574055112646266649"
+    ],
+    "sports_market_type": "soccer_exact_score",
+    "event_id": "349065",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-exact-score-0-0",
+      "group_item_title": "Exact Score: 0-0",
+      "volume": 2821.3281020000004,
+      "closed": true,
+      "closed_time": "2026-04-19 20:45:56+00",
+      "start_date": "2026-04-06T05:36:50.547446Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "exact-score",
+      "event_slug": "epl-mac-ars-2026-04-19-exact-score"
+    }
+  },
+  {
+    "market_id": "1886876",
+    "question": "Exact Score: Manchester City FC 2 - 2 Arsenal FC?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "15406137949190466321661599455329905126652796178084054849835760194477316381906",
+      "59337363167546555666898214802885332968401692591646780438966857112579927198594"
+    ],
+    "sports_market_type": "soccer_exact_score",
+    "event_id": "349065",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-exact-score-2-2",
+      "group_item_title": "Exact Score: 2-2",
+      "volume": 4198.974836000002,
+      "closed": true,
+      "closed_time": "2026-04-19 20:45:56+00",
+      "start_date": "2026-04-06T05:36:56.844215Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "exact-score",
+      "event_slug": "epl-mac-ars-2026-04-19-exact-score"
+    }
+  },
+  {
+    "market_id": "1886877",
+    "question": "Exact Score: Manchester City FC 3 - 0 Arsenal FC?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "6572879516621459859428088593571909131171485640518927372601875009080470418172",
+      "63263248985489578960052709956324544472443297997706250836299582748441109755818"
+    ],
+    "sports_market_type": "soccer_exact_score",
+    "event_id": "349065",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-exact-score-3-0",
+      "group_item_title": "Exact Score: 3-0",
+      "volume": 9779.069103000003,
+      "closed": true,
+      "closed_time": "2026-04-19 20:46:00+00",
+      "start_date": "2026-04-06T05:37:04.982642Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "exact-score",
+      "event_slug": "epl-mac-ars-2026-04-19-exact-score"
+    }
+  },
+  {
+    "market_id": "1886878",
+    "question": "Exact Score: Manchester City FC 3 - 1 Arsenal FC?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "78528635529986552567220325197765364280862480336690068520498425652526339035012",
+      "56888045272874119721286990801159990595339496135595144302016562041299887701207"
+    ],
+    "sports_market_type": "soccer_exact_score",
+    "event_id": "349065",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-exact-score-3-1",
+      "group_item_title": "Exact Score: 3-1",
+      "volume": 7445.356071000001,
+      "closed": true,
+      "closed_time": "2026-04-19 20:45:54+00",
+      "start_date": "2026-04-06T05:37:12.952374Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "exact-score",
+      "event_slug": "epl-mac-ars-2026-04-19-exact-score"
+    }
+  },
+  {
+    "market_id": "1886879",
+    "question": "Exact Score: Manchester City FC 0 - 2 Arsenal FC?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "32538242698245248663616550345219502466602653087570046442403420431412457837019",
+      "94397311592022938445856220280653357358630273055816480880902175714263374267993"
+    ],
+    "sports_market_type": "soccer_exact_score",
+    "event_id": "349065",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-exact-score-0-2",
+      "group_item_title": "Exact Score: 0-2",
+      "volume": 2660.202112,
+      "closed": true,
+      "closed_time": "2026-04-19 20:45:54+00",
+      "start_date": "2026-04-06T05:37:16.94688Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "exact-score",
+      "event_slug": "epl-mac-ars-2026-04-19-exact-score"
+    }
+  },
+  {
+    "market_id": "1886880",
+    "question": "Exact Score: Manchester City FC 3 - 2 Arsenal FC?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "66776233019993743607543389582333982026709081683838772018290569387638510282523",
+      "26707613731760393251652053817265794271441109886106266564666419716094812338884"
+    ],
+    "sports_market_type": "soccer_exact_score",
+    "event_id": "349065",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-exact-score-3-2",
+      "group_item_title": "Exact Score: 3-2",
+      "volume": 6182.077976000001,
+      "closed": true,
+      "closed_time": "2026-04-19 20:46:54+00",
+      "start_date": "2026-04-06T05:37:25.662908Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "exact-score",
+      "event_slug": "epl-mac-ars-2026-04-19-exact-score"
+    }
+  },
+  {
+    "market_id": "1886881",
+    "question": "Exact Score: Manchester City FC 1 - 3 Arsenal FC?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "50660289732475615686276944774112598599310331369957632409534941381034097467414",
+      "103106609873696017368532842612618681681900762954174262340817794297057392403866"
+    ],
+    "sports_market_type": "soccer_exact_score",
+    "event_id": "349065",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-exact-score-1-3",
+      "group_item_title": "Exact Score: 1-3",
+      "volume": 4846.305076,
+      "closed": true,
+      "closed_time": "2026-04-19 20:47:58+00",
+      "start_date": "2026-04-06T05:37:28.803209Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "exact-score",
+      "event_slug": "epl-mac-ars-2026-04-19-exact-score"
+    }
+  },
+  {
+    "market_id": "1886882",
+    "question": "Exact Score: Manchester City FC 2 - 3 Arsenal FC?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "82887131394356131827699508390212979276875188889688457940124552260689879429990",
+      "82632800193337451085127070255474063402440463810981953976214253450758831847984"
+    ],
+    "sports_market_type": "soccer_exact_score",
+    "event_id": "349065",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-exact-score-2-3",
+      "group_item_title": "Exact Score: 2-3",
+      "volume": 2260.047799,
+      "closed": true,
+      "closed_time": "2026-04-19 20:46:56+00",
+      "start_date": "2026-04-06T05:37:40.950145Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "exact-score",
+      "event_slug": "epl-mac-ars-2026-04-19-exact-score"
+    }
+  },
+  {
+    "market_id": "1886883",
+    "question": "Exact Score: Manchester City FC 0 - 3 Arsenal FC?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "48997635165611126311188182850820758359455435734789441292939447623610343652482",
+      "66903576082932127591401771166745583965758661674997481344250046996043421989606"
+    ],
+    "sports_market_type": "soccer_exact_score",
+    "event_id": "349065",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-exact-score-0-3",
+      "group_item_title": "Exact Score: 0-3",
+      "volume": 892.583876,
+      "closed": true,
+      "closed_time": "2026-04-19 20:46:54+00",
+      "start_date": "2026-04-06T05:37:45.121623Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "exact-score",
+      "event_slug": "epl-mac-ars-2026-04-19-exact-score"
+    }
+  },
+  {
+    "market_id": "1886884",
+    "question": "Exact Score: Manchester City FC 3 - 3 Arsenal FC?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "70039978125286828037893767455243534694670505305736605655350564617581240506406",
+      "45704509915616065548726739999502857399611858393453410314213249284859673185383"
+    ],
+    "sports_market_type": "soccer_exact_score",
+    "event_id": "349065",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-exact-score-3-3",
+      "group_item_title": "Exact Score: 3-3",
+      "volume": 7996.926732000003,
+      "closed": true,
+      "closed_time": "2026-04-19 20:45:52+00",
+      "start_date": "2026-04-06T05:37:51.355543Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "exact-score",
+      "event_slug": "epl-mac-ars-2026-04-19-exact-score"
+    }
+  },
+  {
+    "market_id": "1886885",
+    "question": "Exact Score: Any Other Score?",
+    "outcomes": [
+      "Yes",
+      "No"
+    ],
+    "token_ids": [
+      "2729391841326510101540577798108349722271596425547427936101330601169397773389",
+      "83233904923127113703239485421508228105145462613292323203137589349899162752885"
+    ],
+    "sports_market_type": "soccer_exact_score",
+    "event_id": "349065",
+    "final_outcome_prices": [
+      0.0,
+      1.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-exact-score-any-other",
+      "group_item_title": "Exact Score: Any Other Score",
+      "volume": 403.041772,
+      "closed": true,
+      "closed_time": "2026-04-19 20:47:58+00",
+      "start_date": "2026-04-06T05:38:02.522945Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "exact-score",
+      "event_slug": "epl-mac-ars-2026-04-19-exact-score"
+    }
+  },
+  {
+    "market_id": "1982390",
+    "question": "Manchester City FC vs. Arsenal FC: O/U 9.5 Total Corners",
+    "outcomes": [
+      "Over",
+      "Under"
+    ],
+    "token_ids": [
+      "64376983911620341756801828960863863251039218190111963375564613035725701401891",
+      "81383467217938528530421041429484528170056508778511768233399718585271364343190"
+    ],
+    "sports_market_type": "total_corners",
+    "event_id": "378944",
+    "final_outcome_prices": [
+      1.0,
+      0.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-corners-total-9pt5",
+      "group_item_title": "Total Corners: O/U 9.5",
+      "volume": 8023.132516999998,
+      "closed": true,
+      "closed_time": "2026-04-19 20:41:30+00",
+      "start_date": "2026-04-14T16:34:00.278765Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "total-corners",
+      "event_slug": "epl-mac-ars-2026-04-19-total-corners"
+    }
+  },
+  {
+    "market_id": "1982391",
+    "question": "Manchester City FC vs. Arsenal FC: O/U 7.5 Total Corners",
+    "outcomes": [
+      "Over",
+      "Under"
+    ],
+    "token_ids": [
+      "6285127848737611466349822865305941901216204868587927205481540233159346848356",
+      "44341141665214006050379272652267642778415688583207784864844295174567385963957"
+    ],
+    "sports_market_type": "total_corners",
+    "event_id": "378944",
+    "final_outcome_prices": [
+      1.0,
+      0.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-corners-total-7pt5",
+      "group_item_title": "Total Corners: O/U 7.5",
+      "volume": 399.52074600000003,
+      "closed": true,
+      "closed_time": "2026-04-19 20:42:00+00",
+      "start_date": "2026-04-14T16:34:04.243915Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "total-corners",
+      "event_slug": "epl-mac-ars-2026-04-19-total-corners"
+    }
+  },
+  {
+    "market_id": "1982392",
+    "question": "Manchester City FC vs. Arsenal FC: O/U 8.5 Total Corners",
+    "outcomes": [
+      "Over",
+      "Under"
+    ],
+    "token_ids": [
+      "81007188434982189469163650045069133681337127360872912302970798074788189209457",
+      "109059180927005122398263585277981995619066334108128832895902930622470479061858"
+    ],
+    "sports_market_type": "total_corners",
+    "event_id": "378944",
+    "final_outcome_prices": [
+      1.0,
+      0.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-corners-total-8pt5",
+      "group_item_title": "Total Corners: O/U 8.5",
+      "volume": 1155.934979,
+      "closed": true,
+      "closed_time": "2026-04-19 20:41:38+00",
+      "start_date": "2026-04-14T16:34:02.225464Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "total-corners",
+      "event_slug": "epl-mac-ars-2026-04-19-total-corners"
+    }
+  },
+  {
+    "market_id": "1982393",
+    "question": "Manchester City FC vs. Arsenal FC: O/U 10.5 Total Corners",
+    "outcomes": [
+      "Over",
+      "Under"
+    ],
+    "token_ids": [
+      "96416857582998178770803878222422817480532260275556034299198281142236327660486",
+      "23172178351844941307756471769009774353406441694147795878215880343815334952835"
+    ],
+    "sports_market_type": "total_corners",
+    "event_id": "378944",
+    "final_outcome_prices": [
+      1.0,
+      0.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-corners-total-10pt5",
+      "group_item_title": "Total Corners: O/U 10.5",
+      "volume": 1111.1092759999997,
+      "closed": true,
+      "closed_time": "2026-04-19 20:40:32+00",
+      "start_date": "2026-04-14T16:34:04.497535Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "total-corners",
+      "event_slug": "epl-mac-ars-2026-04-19-total-corners"
+    }
+  },
+  {
+    "market_id": "1982394",
+    "question": "Manchester City FC vs. Arsenal FC: O/U 11.5 Total Corners",
+    "outcomes": [
+      "Over",
+      "Under"
+    ],
+    "token_ids": [
+      "60522492034123613859674741836043069387816853399683687352693713698229562928155",
+      "101476923599785374096637668762916636646740012559248275630756333069888880181089"
+    ],
+    "sports_market_type": "total_corners",
+    "event_id": "378944",
+    "final_outcome_prices": [
+      1.0,
+      0.0
+    ],
+    "metadata": {
+      "slug": "epl-mac-ars-2026-04-19-corners-total-11pt5",
+      "group_item_title": "Total Corners: O/U 11.5",
+      "volume": 1131.401154,
+      "closed": true,
+      "closed_time": "2026-04-19 19:29:00+00",
+      "start_date": "2026-04-14T16:34:09.66184Z",
+      "end_date": "2026-04-19T15:30:00Z",
+      "game_start_time": "2026-04-19 15:30:00+00",
+      "event_group": "total-corners",
+      "event_slug": "epl-mac-ars-2026-04-19-total-corners"
     }
   }
 ]

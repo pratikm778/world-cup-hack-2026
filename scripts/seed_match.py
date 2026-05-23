@@ -49,21 +49,27 @@ def build_fixture() -> FixtureRef:
 
 def pull_polymarket(fixture: FixtureRef, out_dir: Path) -> None:
     provider = PolymarketProvider()
-    print(f"[polymarket] fetching event {fixture.polymarket_event_slug!r}…")
-    event, markets = provider.list_event_markets(fixture)
+    print(f"[polymarket] probing sibling events for base {fixture.polymarket_event_slug!r}…")
+    events, markets = provider.list_all_event_markets(fixture)
 
-    print(f"[polymarket] event {event['id']} — {event['title']!r}")
-    print(f"[polymarket] {len(markets)} markets, "
+    total_vol = sum(e.get("volume", 0) for e in events)
+    print(f"[polymarket] {len(events)} events, {len(markets)} markets, "
           f"{sum(len(m.token_ids) for m in markets)} tokens, "
-          f"volume=${event.get('volume', 0):,.0f}")
+          f"total volume=${total_vol:,.0f}")
+    for e in events:
+        print(f"  · {e['slug']:50s} {len(e.get('markets', [])):>3d} markets  ${e.get('volume', 0):>14,.0f}")
 
-    (out_dir / "event.json").write_text(json.dumps(event, indent=2))
+    (out_dir / "events.json").write_text(json.dumps(events, indent=2))
     (out_dir / "markets.json").write_text(
         json.dumps([dump(m) for m in markets], indent=2)
     )
 
     kickoff = fixture.kickoff_utc
-    pre_start = datetime.fromisoformat(event["createdAt"].replace("Z", "+00:00"))
+    # Use the EARLIEST createdAt across all sibling events for the pre-match
+    # window start — sibling events sometimes open later than the moneyline.
+    pre_start = min(
+        datetime.fromisoformat(e["createdAt"].replace("Z", "+00:00")) for e in events
+    )
     pre_end = kickoff - timedelta(minutes=IN_MATCH_PRE_PAD_MIN)
     in_start = pre_end
     in_end = kickoff + timedelta(minutes=90 + IN_MATCH_POST_PAD_MIN)
@@ -76,7 +82,8 @@ def pull_polymarket(fixture: FixtureRef, out_dir: Path) -> None:
 
     for market in markets:
         for outcome, token_id in zip(market.outcomes, market.token_ids):
-            label = f"{market.metadata.get('group_item_title') or market.question[:32]} / {outcome}"
+            group = market.metadata.get("event_group", "?")
+            label = f"[{group}] {market.metadata.get('group_item_title') or market.question[:32]} / {outcome}"
             try:
                 pre = provider.get_price_history(
                     token_id,
@@ -104,6 +111,8 @@ def pull_polymarket(fixture: FixtureRef, out_dir: Path) -> None:
                 "market_id": market.market_id,
                 "outcome": outcome,
                 "question": market.question,
+                "event_group": group,
+                "event_slug": market.metadata.get("event_slug"),
                 "windows": {
                     "pre_match": {
                         "start": pre_start.isoformat(),

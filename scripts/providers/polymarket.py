@@ -16,25 +16,44 @@ GAMMA_BASE = "https://gamma-api.polymarket.com"
 CLOB_BASE = "https://clob.polymarket.com"
 TIMEOUT = 20
 
+# Polymarket structures each EPL game as a constellation of sibling events
+# sharing a base slug. Empirically these are the only suffixes used; other
+# candidates (-total-cards, -total-goals, -anytime-scorer, -first-scorer,
+# -btts, -double-chance) all 404 for EPL regular-season games.
+EPL_EVENT_SUFFIXES = (
+    "",                     # 3-way moneyline
+    "-more-markets",        # spreads + totals + BTTS
+    "-halftime-result",     # halftime moneyline
+    "-exact-score",         # exact score grid (~24 cells)
+    "-total-corners",       # corners O/U at multiple thresholds
+)
+
 
 class PolymarketProvider:
     def __init__(self, session: requests.Session | None = None) -> None:
         self.s = session or requests.Session()
 
-    def get_event(self, slug: str) -> dict[str, Any]:
+    def get_event(self, slug: str) -> dict[str, Any] | None:
+        """Return the event dict for `slug`, or None if no such event exists."""
         r = self.s.get(f"{GAMMA_BASE}/events", params={"slug": slug}, timeout=TIMEOUT)
         r.raise_for_status()
         data = r.json()
-        if not data:
-            raise LookupError(f"No Polymarket event with slug {slug!r}")
-        return data[0]
+        return data[0] if data else None
 
-    def list_event_markets(self, fixture: FixtureRef) -> tuple[dict[str, Any], list[Market]]:
-        if not fixture.polymarket_event_slug:
-            raise ValueError("fixture.polymarket_event_slug is required")
-        event = self.get_event(fixture.polymarket_event_slug)
+    def _markets_from_event(self, event: dict[str, Any], event_group: str) -> list[Market]:
+        """Convert one event's raw markets array into normalized Market objects.
+
+        Markets without `clobTokenIds` are silently dropped — those are
+        unfunded shell entries (e.g., exact-score cells like 5-0 that nobody
+        traded). They have no orderbook to query, so they're not useful for
+        the replay engine.
+        """
         markets: list[Market] = []
+        skipped_unfunded = 0
         for raw in event.get("markets", []):
+            if not raw.get("clobTokenIds"):
+                skipped_unfunded += 1
+                continue
             try:
                 outcomes = json.loads(raw["outcomes"])
                 token_ids = json.loads(raw["clobTokenIds"])
@@ -61,10 +80,51 @@ class PolymarketProvider:
                         "start_date": raw.get("startDate"),
                         "end_date": raw.get("endDate"),
                         "game_start_time": raw.get("gameStartTime"),
+                        "event_group": event_group,
+                        "event_slug": event.get("slug"),
                     },
                 )
             )
-        return event, markets
+        if skipped_unfunded:
+            print(f"  ({event_group}: skipped {skipped_unfunded} unfunded shell markets)")
+        return markets
+
+    def list_event_markets(self, fixture: FixtureRef) -> tuple[dict[str, Any], list[Market]]:
+        """Single-event lookup (backwards-compat). Returns the moneyline event."""
+        if not fixture.polymarket_event_slug:
+            raise ValueError("fixture.polymarket_event_slug is required")
+        event = self.get_event(fixture.polymarket_event_slug)
+        if event is None:
+            raise LookupError(f"No Polymarket event with slug {fixture.polymarket_event_slug!r}")
+        return event, self._markets_from_event(event, event_group="moneyline")
+
+    def list_all_event_markets(
+        self,
+        fixture: FixtureRef,
+        suffixes: tuple[str, ...] = EPL_EVENT_SUFFIXES,
+    ) -> tuple[list[dict[str, Any]], list[Market]]:
+        """Probe all known sibling-event slugs and return merged markets.
+
+        Returns (list_of_event_dicts, merged_markets). Silently skips suffixes
+        that 404 — Polymarket isn't consistent about which markets exist for
+        which games (e.g., halftime/corners can be missing for less-traded ties).
+        """
+        if not fixture.polymarket_event_slug:
+            raise ValueError("fixture.polymarket_event_slug is required")
+        base = fixture.polymarket_event_slug
+        events: list[dict[str, Any]] = []
+        markets: list[Market] = []
+        for suf in suffixes:
+            slug = base + suf
+            event = self.get_event(slug)
+            if event is None:
+                continue
+            group = suf.lstrip("-") or "moneyline"
+            events.append(event)
+            markets.extend(self._markets_from_event(event, event_group=group))
+        if not events:
+            raise LookupError(f"No Polymarket events found for base slug {base!r}")
+        return events, markets
 
     def get_price_history(
         self,

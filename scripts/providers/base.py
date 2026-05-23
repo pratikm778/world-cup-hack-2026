@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
-from typing import Any, AsyncIterator, Protocol
+from typing import Any, Iterator, Protocol
 
 
 @dataclass
@@ -58,13 +58,15 @@ class PricePoint:
 
 
 class CommentaryProvider(Protocol):
-    async def get_historical(self, fixture: FixtureRef) -> list[CommentaryEntry]: ...
-    def stream_live(self, fixture: FixtureRef) -> AsyncIterator[CommentaryEntry]: ...
+    def get_historical(self, fixture: FixtureRef) -> list[CommentaryEntry]: ...
+    def stream_live(
+        self, fixture: FixtureRef, *, poll_interval_seconds: int = 60
+    ) -> Iterator[CommentaryEntry]: ...
 
 
 class MarketProvider(Protocol):
-    async def list_event_markets(self, fixture: FixtureRef) -> list[Market]: ...
-    async def get_price_history(
+    def list_event_markets(self, fixture: FixtureRef) -> list[Market]: ...
+    def get_price_history(
         self,
         token_id: str,
         *,
@@ -72,7 +74,9 @@ class MarketProvider(Protocol):
         end_ts: datetime,
         fidelity_minutes: int,
     ) -> list[PricePoint]: ...
-    def stream_live_prices(self, token_id: str) -> AsyncIterator[PricePoint]: ...
+    def stream_live_prices(
+        self, token_id: str, *, poll_interval_seconds: int = 60
+    ) -> Iterator[PricePoint]: ...
 
 
 def dump(obj: Any) -> Any:
