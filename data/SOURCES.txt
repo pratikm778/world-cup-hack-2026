@@ -1,0 +1,341 @@
+================================================================================
+EDGECAST — DATA SOURCES & GENERATED ARTIFACTS
+================================================================================
+
+Last regenerated for fixture: Man City vs Arsenal, 2026-04-19 (ESPN 740916)
+Regenerate any match:  python scripts/seed_match.py
+Live-stream smoke test: python scripts/smoke_stream_espn.py
+
+This file describes every external data source we hit and every file we
+produce. Read this before changing the seeder or trusting the data.
+
+
+================================================================================
+PART 1 — EXTERNAL DATA SOURCES
+================================================================================
+
+
+--------------------------------------------------------------------------------
+[1] POLYMARKET GAMMA API — market discovery
+--------------------------------------------------------------------------------
+
+  Base URL    : https://gamma-api.polymarket.com
+  Auth        : None (public)
+  Provider    : scripts/providers/polymarket.py :: PolymarketProvider
+
+  Endpoints used:
+    GET /events?slug=<slug>
+      Returns: [event] — a single event with .markets[] (each market has
+               .question, .clobTokenIds, .outcomePrices, .volumeNum,
+               .groupItemTitle, .sportsMarketType).
+
+  Sibling-event slug pattern for EPL games (locked):
+    {base}                       3 markets   moneyline (Home/Draw/Away)
+    {base}-more-markets          9 markets   spreads + totals + BTTS
+    {base}-halftime-result       3 markets   halftime moneyline
+    {base}-exact-score          24 markets   score grid (7 are unfunded shells)
+    {base}-total-corners         5 markets   corners over/under
+
+  Slugs we probed and confirmed do NOT exist for EPL regular-season games:
+    -total-cards, -total-goals, -total-shots, -anytime-scorer,
+    -first-scorer, -double-chance, -btts
+
+  Quirks:
+    - Unfunded shell markets (volume = $0) have no `clobTokenIds` field. We
+      skip them silently — there's no orderbook to query.
+    - Player anytime-scorer markets do NOT exist as match-tied events for
+      regular EPL games. Polymarket UI shows generic player chips that are
+      not Gamma-queryable for a specific match.
+    - The /public-search endpoint exists but ranks poorly; trust slug probes.
+    - `negRiskMarketID` does NOT cluster sibling events — sibling events share
+      a slug prefix, not a neg-risk ID.
+
+
+--------------------------------------------------------------------------------
+[2] POLYMARKET CLOB API — price history & live prices
+--------------------------------------------------------------------------------
+
+  Base URL    : https://clob.polymarket.com
+  Auth        : None for read paths (orders require auth — we don't write)
+  Provider    : scripts/providers/polymarket.py :: PolymarketProvider
+
+  Endpoints used:
+    GET /prices-history?market=<token_id>&startTs=<unix>&endTs=<unix>&fidelity=<minutes>
+      Returns: { history: [ { t: <unix>, p: <0..1 price> }, ... ] }
+
+  CRITICAL — `fidelity` units:
+    `fidelity` is in MINUTES, not seconds. Third-party docs (medium,
+    dlthub, pm.wiki) disagree; the empirical truth is verified:
+        fidelity=5  over 240min window → 50 buckets  (1 per 5 min)
+        fidelity=60 over 240min window →  4 buckets  (1 per 60 min)
+        fidelity=1  → densest available (~1 point per minute, server-capped)
+
+  Response cap:
+    Server caps responses around 250–330 points. For wide windows + low
+    fidelity, you trade granularity for coverage. We split each token into
+    two pulls (pre-match + in-match) to avoid the cap biting either window.
+
+  `interval=max|1d|1w|1m` works ONLY for active markets. Closed games (our
+  whole demo set) require explicit startTs / endTs.
+
+  Token IDs are ERC-1155 token IDs. Each Yes/No outcome is its own token.
+  For one market with outcomes ["Yes","No"], you get 2 token IDs in
+  `.clobTokenIds`.
+
+  Future live mode (NOT YET WIRED):
+    - REST poll on midpoint: GET /midpoint?token_id=<id>
+    - WebSocket for sub-second updates: wss://ws-subscriptions-clob.polymarket.com
+
+
+--------------------------------------------------------------------------------
+[3] ESPN SOCCER SUMMARY API — commentary + structured events
+--------------------------------------------------------------------------------
+
+  Base URL    : https://site.api.espn.com
+  Auth        : None (public, undocumented but stable)
+  Provider    : scripts/providers/espn.py :: EspnProvider
+
+  Endpoints used:
+    GET /apis/site/v2/sports/soccer/{league}/summary?event=<gameId>
+      League codes we support:
+        epl       → eng.1
+        laliga    → esp.1
+        seriea    → ita.1
+        bundesliga → ger.1
+      Response top-level keys (we use): commentary, keyEvents, header
+
+  Same endpoint serves historical AND live in-progress games. The
+  `commentary` array grows tick-by-tick as the match runs. This is why
+  ESPN is our primary commentary source — same code works in both modes.
+
+  Per-entry shape (the ones we care about):
+    sequence  : int, monotonically increasing — our dedup key
+    text      : narrative string ("Goal! Manchester City 2, Arsenal 1. ...")
+    time.displayValue : "16'" or "90'+6'" — parsed into minute + extra_time
+    play.type.type    : structured event type (goal, yellow-card, foul, …)
+    play.wallclock    : UTC ISO timestamp — JOIN KEY against Polymarket
+    play.athletesInvolved[].displayName : player names
+    play.team.displayName               : team
+
+  Cache header: `cache-control: max-age=1`. No ETag. Every poll is a full
+  fetch. Payload is ~50–100 KB per match.
+
+  Empirical publication cadence on Man City vs Arsenal 2026-04-19
+  (81 of 96 entries have wallclock):
+    median gap between entries : 51s
+    p25                        :  2s   (bursts: card+foul same instant)
+    p75                        : 108s
+    p95                        : 326s  (5.4 min — typical halftime)
+    max                        : 926s  (15 min — full halftime)
+
+  Default polling cadence in stream_live(): 60 seconds.
+    Tradeoff: events lag ~30s on average (half the interval); bursts get
+    batched into one poll; gentle on ESPN's tolerance.
+
+  Termination criterion for stream_live():
+    Match completed (header.competitions[0].status.type.completed = true)
+    AND one subsequent poll returned no new entries. Two-phase guard
+    handles the race where "Match ends" appears in the same payload as
+    the completion flag.
+
+  15 of 96 entries have NO wallclock (framing texts like "Match ends, …"
+  and "First Half ends, …"). Filter on wallclock != null when computing
+  event density.
+
+
+================================================================================
+PART 2 — GENERATED FILES IN /data/matches/<match_id>/
+================================================================================
+
+For the current seed (ars-man-2026-04-19), total disk = ~20 MB.
+
+
+--------------------------------------------------------------------------------
+[A] meta.json                                                    ~ 300 bytes
+--------------------------------------------------------------------------------
+
+  Producer  : scripts/seed_match.py :: main()
+  Sources   : hardcoded fixture metadata (build_fixture)
+  Used for  : identifying the match across providers; downstream config
+
+  Schema:
+    {
+      short_id              : "ars-man-2026-04-19",
+      home, away            : "Manchester City FC", "Arsenal FC",
+      kickoff_utc           : "2026-04-19T15:30:00+00:00",
+      competition           : "epl",
+      polymarket_event_slug : "epl-mac-ars-2026-04-19",
+      espn_game_id          : "740916",
+      generated_at          : ISO timestamp of last seed run
+    }
+
+
+--------------------------------------------------------------------------------
+[B] events.json                                                  ~ 90 KB
+--------------------------------------------------------------------------------
+
+  Producer  : pull_polymarket() — Gamma API
+  Source    : 5 calls to GET /events?slug=<sibling_slug>
+  Used for  : event-level metadata (volume, start/end dates, teams, sport)
+
+  Shape: list of 5 raw Polymarket event dicts (one per sibling slug).
+  Each event embeds its own .markets[] — but we extract those into
+  markets.json. Keep this file for event-level fields:
+    .eventMetadata.context_description   ← Polymarket's own narrative blurb
+                                          (useful seed for the RAG corpus)
+    .score, .gameId, .teams[], .series   ← background context
+    .volume, .openInterest               ← whole-event volume
+
+
+--------------------------------------------------------------------------------
+[C] markets.json                                                 ~ 50 KB
+--------------------------------------------------------------------------------
+
+  Producer  : pull_polymarket() — normalized via PolymarketProvider
+  Source    : flattened from events[*].markets[]
+  Used for  : the universe of bettable markets
+
+  Current contents (37 markets, 74 tokens, $8.0M total volume):
+    moneyline       :  3 markets   $5,353,403
+    more-markets    :  9 markets   $2,545,210
+    exact-score     : 17 markets       $80,449   (7 unfunded shells dropped)
+    halftime-result :  3 markets       $13,832
+    total-corners   :  5 markets       $11,821
+
+  Per-market schema:
+    market_id              : str (Polymarket id)
+    question               : "Will Manchester City FC win on 2026-04-19?"
+    outcomes               : ["Yes", "No"]   (almost always binary)
+    token_ids              : [str, str]      (one CLOB token per outcome)
+    sports_market_type     : "moneyline" | "spread" | "total" | "exact-score" | ...
+    final_outcome_prices   : [1.0, 0.0]  (set once market resolved)
+    event_id               : parent event id
+    metadata.event_group   : "moneyline" | "more-markets" | "halftime-result"
+                             | "exact-score" | "total-corners"
+    metadata.event_slug    : the sibling slug this market came from
+    metadata.group_item_title : human-readable label ("Manchester City FC (-1.5)")
+    metadata.volume        : per-market volume in USD
+    metadata.start_date    : when market opened for trading
+    metadata.end_date      : nominal end (= kickoff)
+    metadata.closed_time   : actual resolution time
+
+
+--------------------------------------------------------------------------------
+[D] commentary.json                                              ~ 28 KB
+--------------------------------------------------------------------------------
+
+  Producer  : pull_commentary() — ESPN summary endpoint
+  Source    : GET /apis/site/v2/sports/soccer/eng.1/summary?event=740916
+  Used for  : replay engine input + event classifier ground truth
+
+  96 entries, normalized via EspnProvider._summary_to_entries().
+
+  Per-entry schema:
+    minute          : 0..90      (in-game minute; 0 for framing texts)
+    extra_time      : 0..N       (stoppage; 6 means "90'+6")
+    text            : full narrative string
+    ts_utc          : UTC ISO timestamp (null for framing texts)
+    raw_event_type  : structured type ("goal","yellow-card","foul",…) or null
+    players         : [player names involved]
+    team            : team name or null
+    source          : "espn"
+
+  Empirical event-type counts for this match:
+    foul             32   substitution       8   yellow-card  4
+    corner-kick       9   shot-blocked       7   goal         3
+    shot-off-target   6   offside            4   shot-on-target 3
+    shot-hit-woodwork 2   kickoff            1   halftime     1
+    handball          1
+    (untyped: 15 — framing texts like "First Half ends, ...")
+
+
+--------------------------------------------------------------------------------
+[E] key_events.json                                              ~ 17 KB
+--------------------------------------------------------------------------------
+
+  Producer  : pull_commentary() — ESPN `keyEvents` array (passthrough)
+  Used for  : editorial highlight reel — goals, cards, subs only
+
+  19 entries, structured but verbose. Useful as a curated label set for
+  validating the event classifier — anything in here is definitionally
+  worth narrating.
+
+  Goal entries you'll see in the demo:
+    16'    Goal — Rayan Cherki (Man City) 1-0
+    18'    Goal — Kai Havertz (Arsenal) 1-1
+    65'    Goal — Erling Haaland (Man City) 2-1   ← demo centerpiece
+
+
+--------------------------------------------------------------------------------
+[F] prices/<token_id>.json   × 74 files                          ~ 20 MB total
+--------------------------------------------------------------------------------
+
+  Producer  : pull_polymarket() — CLOB /prices-history
+  Source    : 148 API calls (74 tokens × 2 windows: pre-match + in-match)
+  Used for  : the price-time series the agent reacts to
+
+  Per-file schema:
+    token_id          : str (ERC-1155, same as filename)
+    market_id         : parent market id
+    outcome           : "Yes" | "No"
+    question          : market question this token belongs to
+    event_group       : "moneyline" | "more-markets" | etc.
+    event_slug        : sibling slug
+    windows.pre_match : { start, end, fidelity_minutes: 10, point_count }
+    windows.in_match  : { start, end, fidelity_minutes: 1,  point_count }
+    points            : [ { ts_utc, price, token_id }, ... ] sorted by ts_utc
+
+  Two-window strategy:
+    pre-match (13 days before kickoff)  : fidelity=10min → ~300 points
+    in-match (30min pre to 90min post)  : fidelity=1min  → ~180 points
+    Merged per token, sorted by wallclock.
+
+  Total: ~115,700 price points across 74 tokens.
+
+  Replay-engine hint:
+    Don't open one file per token at request time. Pre-build a single
+    timeline indexed by wallclock minute → all-token-prices-at-that-minute.
+    Memory cost is trivial (~5MB resident); request cost drops to O(1).
+
+
+================================================================================
+PART 3 — JOIN KEYS (how the data sources connect)
+================================================================================
+
+  Wallclock UTC          ← THE primary join key
+                           (commentary.ts_utc ↔ prices.points[].ts_utc)
+                           Don't compute "minute since kickoff" yourself;
+                           use the wallclocks ESPN gives you on each play.
+
+  Match identity:
+    fixture.polymarket_event_slug  → Polymarket Gamma
+    fixture.espn_game_id           → ESPN summary
+    No shared ID across providers. We bind them in build_fixture() and
+    pass FixtureRef through. To add a new match, update build_fixture
+    or accept the IDs via CLI args.
+
+  Token → market → event:
+    Each prices/<token_id>.json carries market_id + event_slug, so a
+    price tick is fully self-describing without external joins.
+
+
+================================================================================
+PART 4 — REGENERATION
+================================================================================
+
+  Full re-pull (idempotent, ~70 seconds for the current fixture):
+    python scripts/seed_match.py
+
+  ESPN live-stream smoke test (proves dedup against the closed game):
+    python scripts/smoke_stream_espn.py        # 60s polls (default)
+    python scripts/smoke_stream_espn.py 3      # 3s polls (faster smoke)
+
+  To target a different match, edit build_fixture() in scripts/seed_match.py:
+    - Set polymarket_event_slug to the moneyline event slug
+    - Set espn_game_id to the ESPN soccer gameId
+    - Set kickoff_utc to the kickoff time
+    Both IDs are findable from the public site URLs:
+      polymarket.com/sports/epl/<slug>      → polymarket_event_slug
+      espn.com/soccer/match/_/gameId/<id>   → espn_game_id
+
+================================================================================
