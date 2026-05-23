@@ -1,0 +1,94 @@
+{
+  "components": [
+    {
+      "id": "response_answers_1",
+      "provider": "response_answers",
+      "name": "Return Answers",
+      "config": {
+        "laneName": "answers",
+        "name": "Return Answers"
+      },
+      "ui": {
+        "position": {
+          "x": 1140,
+          "y": 340
+        },
+        "nodeType": "default",
+        "formDataValid": true
+      },
+      "input": [
+        {
+          "lane": "answers",
+          "from": "llm_gmi_cloud_1"
+        }
+      ]
+    },
+    {
+      "id": "llm_gmi_cloud_1",
+      "provider": "llm_gmi_cloud",
+      "name": "GMI Cloud",
+      "config": {
+        "profile": "gemini-3-flash",
+        "deepseek-v3": {
+          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE2OTAzYzM4LTIwMWMtNGY4YS04ZTBiLTdkYjU2MTE0NmRjYyIsInNjb3BlIjoiaWVfbW9kZWwiLCJjbGllbnRJZCI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMCJ9.Ye0MoVpSEXVCamyBcfImtLTtQDLjJypal6EVpVouU-0"
+        },
+        "name": "GMI Cloud",
+        "parameters": {
+          "google": {}
+        },
+        "gemini-3-flash": {
+          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE2OTAzYzM4LTIwMWMtNGY4YS04ZTBiLTdkYjU2MTE0NmRjYyIsInNjb3BlIjoiaWVfbW9kZWwiLCJjbGllbnRJZCI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMCJ9.Ye0MoVpSEXVCamyBcfImtLTtQDLjJypal6EVpVouU-0"
+        },
+        "custom": {
+          "serverbase": "https://api.gmi-serving.com/v1/chat/completions",
+          "model": "google/gemini-3.5-flash",
+          "modelTotalTokens": 512,
+          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE2OTAzYzM4LTIwMWMtNGY4YS04ZTBiLTdkYjU2MTE0NmRjYyIsInNjb3BlIjoiaWVfbW9kZWwiLCJjbGllbnRJZCI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMCJ9.Ye0MoVpSEXVCamyBcfImtLTtQDLjJypal6EVpVouU-0"
+        }
+      },
+      "ui": {
+        "position": {
+          "x": 820,
+          "y": 390
+        },
+        "nodeType": "default",
+        "formDataValid": true
+      },
+      "input": [
+        {
+          "lane": "questions",
+          "from": "webhook_1"
+        }
+      ]
+    },
+    {
+      "id": "webhook_1",
+      "provider": "webhook",
+      "name": "Web Hook",
+      "config": {
+        "hideForm": true,
+        "mode": "Source",
+        "parameters": {},
+        "type": "webhook",
+        "name": "Web Hook"
+      },
+      "ui": {
+        "position": {
+          "x": 570,
+          "y": 350
+        },
+        "nodeType": "default",
+        "formDataValid": true
+      }
+    }
+  ],
+  "project_id": "e6f8bdc9-3008-43dc-bbcc-4d200ebcab9e",
+  "isLocked": false,
+  "snapToGrid": true,
+  "snapGridSize": [
+    10,
+    10
+  ],
+  "version": 1,
+  "docRevision": 100
+}
