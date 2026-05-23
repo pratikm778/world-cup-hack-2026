@@ -1,0 +1,6 @@
+{
+  "name": "Sports Arbitrage AI Agent Workspace",
+  "description": "An interactive agent workspace demonstrating continuous dual-data ingestion, real-time Gemini momentum analysis, Polymarket odds mismatch detection, and simulated WhatsApp alerts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
