@@ -1,6 +1,8 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { substituteMarketIdsInText } from "../marketLabels";
+import { enrichCitedFromPrices, type CitedMarketRef } from "../marketRefs";
 import { formatCommentaryClock, formatMatchClock } from "../matchClock";
+import { AgentMessage } from "./components/AgentMessage";
 import { 
   Sparkles, Play, Pause, RotateCcw, Radio, Settings, 
   Sliders, MessageSquare, Terminal, RefreshCw, 
@@ -47,6 +49,8 @@ export default function App() {
     label?: string;
     question?: string;
     type?: string;
+    slug?: string;
+    polymarket_url?: string;
   }>>({});
   const [marketLabels, setMarketLabels] = useState<Record<string, string>>({});
   const [recentGlows, setRecentGlows] = useState<Record<string, boolean>>({});
@@ -54,11 +58,20 @@ export default function App() {
     id: string;
     minute: number;
     text: string;
+    cited_markets?: CitedMarketRef[];
     urgency?: string;
   }>>([]);
   const [viewingBroadcastId, setViewingBroadcastId] = useState<string | null>(null);
+  const [focusedMarketId, setFocusedMarketId] = useState<string | null>(null);
+  const marketRowRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [chatInput, setChatInput] = useState<string>("");
-  const [chatHistory, setChatHistory] = useState<Array<{ sender: "user" | "gemini"; text: string; time: string; model?: string }>>([]);
+  const [chatHistory, setChatHistory] = useState<Array<{
+    sender: "user" | "gemini";
+    text: string;
+    cited_markets?: CitedMarketRef[];
+    time: string;
+    model?: string;
+  }>>([]);
   const [isChatBusy, setIsChatBusy] = useState<boolean>(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
   const commentaryBottomRef = useRef<HTMLDivElement>(null);
@@ -136,6 +149,7 @@ export default function App() {
               id: `${data.minute}-${Date.now()}`,
               minute: data.minute,
               text: data.text,
+              cited_markets: data.cited_markets || [],
               urgency: data.urgency,
             }];
           });
@@ -160,10 +174,43 @@ export default function App() {
     prevCommentaryLenRef.current = commentary.length;
   }, [commentary, isPlaying]);
 
+  const priceLookup = useMemo(() => {
+    const lookup: Record<string, { price?: number; label?: string }> = {};
+    for (const id of Object.keys(prices)) {
+      const p = prices[id];
+      lookup[id] = { price: p.price, label: p.label };
+    }
+    return lookup;
+  }, [prices]);
+
+  const enrichCited = useCallback(
+    (cited: CitedMarketRef[] = []) => enrichCitedFromPrices(cited, priceLookup),
+    [priceLookup],
+  );
+
   const latestBroadcast = broadcasts.length > 0 ? broadcasts[broadcasts.length - 1] : null;
   const displayedBroadcast = viewingBroadcastId
     ? broadcasts.find((b) => b.id === viewingBroadcastId) ?? latestBroadcast
     : latestBroadcast;
+  const displayedCitedMarkets = useMemo(
+    () => enrichCited(displayedBroadcast?.cited_markets || []),
+    [displayedBroadcast, enrichCited],
+  );
+  const agentCitedIds = useMemo(
+    () => new Set(displayedCitedMarkets.map((c) => c.market_id)),
+    [displayedCitedMarkets],
+  );
+
+  const handleMarketSelect = useCallback((marketId: string) => {
+    setFocusedMarketId(marketId);
+  }, []);
+
+  useEffect(() => {
+    if (!focusedMarketId) return;
+    const el = marketRowRefs.current[focusedMarketId];
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusedMarketId, prices]);
+
   const isViewingArchive = Boolean(
     viewingBroadcastId && latestBroadcast && viewingBroadcastId !== latestBroadcast.id,
   );
@@ -171,6 +218,81 @@ export default function App() {
 
   const formatMarketText = (text: string) =>
     substituteMarketIdsInText(text, marketLabels);
+
+  const sortedMarkets = useMemo(
+    () => (Object.entries(prices) as [string, typeof prices[string]][])
+      .map(([mId, pInfo]) => ({
+        market_id: mId,
+        price: pInfo.price,
+        delta5m: pInfo.delta5m,
+        delta2m: pInfo.delta2m,
+        label: pInfo.label || marketLabels[mId] || pInfo.question || `Market ${mId}`,
+        type: pInfo.type,
+        polymarket_url: pInfo.polymarket_url,
+      }))
+      .sort((a, b) => Math.abs(b.delta5m) - Math.abs(a.delta5m)),
+    [prices, marketLabels],
+  );
+
+  const renderMarketCard = (item: {
+    market_id: string;
+    price: number;
+    delta5m: number;
+    delta2m: number;
+    label: string;
+    type?: string;
+    polymarket_url?: string;
+  }, compact = false) => {
+    const isGlowing = recentGlows[item.market_id];
+    const isAgentCited = agentCitedIds.has(item.market_id);
+    const isFocused = focusedMarketId === item.market_id;
+
+    return (
+      <div
+        key={item.market_id}
+        ref={(el) => { marketRowRefs.current[item.market_id] = el; }}
+        className={`${compact ? "p-2" : "p-3"} border rounded-xl flex flex-col gap-2 transition-all duration-500 ${
+          isFocused
+            ? "ring-2 ring-white/60 border-white/30 bg-white/[0.06] scale-[1.02]"
+            : isGlowing
+              ? "bg-yellow-500/10 border-yellow-500/40 shadow-[0_0_20px_rgba(234,179,8,0.2)] scale-[1.01]"
+              : isAgentCited
+                ? "bg-cyan-500/10 border-cyan-500/35 shadow-[0_0_12px_rgba(34,211,238,0.12)]"
+                : "bg-white/[0.02] border-white/5 hover:border-white/10"
+        }`}
+      >
+        <div className="flex justify-between items-start gap-2">
+          <span className={`${compact ? "text-[10px]" : "text-[11px]"} font-sans font-medium text-slate-300 leading-normal line-clamp-2`}>
+            {item.label}
+            {isAgentCited && (
+              <span className="ml-1.5 text-[8px] font-mono uppercase tracking-wider text-cyan-400/80">
+                cited
+              </span>
+            )}
+          </span>
+          <span className="text-xs font-mono font-bold text-cyan-400 shrink-0">
+            {item.price}c
+          </span>
+        </div>
+
+        {!compact && (
+          <div className="flex justify-between items-center text-[9px] font-mono">
+            <span className="text-slate-500 truncate max-w-[55%]">
+              {item.type ? item.type.replace(/_/g, " ") : "market"}
+            </span>
+            <div className="flex gap-2">
+              <span className={item.delta2m >= 0 ? "text-emerald-400" : "text-rose-400"}>
+                2m: {item.delta2m >= 0 ? "+" : ""}{item.delta2m}c
+              </span>
+              <span className={`font-bold ${item.delta5m >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                5m: {item.delta5m >= 0 ? "+" : ""}{item.delta5m}c
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const broadcastCardClass = (urgency?: string) =>
     urgency === "major"
@@ -203,6 +325,7 @@ export default function App() {
     setCurrentMinute(0);
     setBroadcasts([]);
     setViewingBroadcastId(null);
+    setFocusedMarketId(null);
     setChatHistory([]);
     prevCommentaryLenRef.current = 0;
     try {
@@ -236,8 +359,9 @@ export default function App() {
         setChatHistory((prev) => [...prev, {
           sender: "gemini",
           text: data.answer,
+          cited_markets: data.cited_markets || [],
           time: formatMatchClock(currentMinute),
-          model: data.modelUsed
+          model: data.modelUsed,
         }]);
       } else {
         const errText = await response.text();
@@ -432,9 +556,12 @@ export default function App() {
                           </span>
                           <span>{formatMatchClock(displayedBroadcast.minute)}</span>
                         </div>
-                        <div className="leading-relaxed font-sans text-sm">
-                          {formatMarketText(displayedBroadcast.text)}
-                        </div>
+                        <AgentMessage
+                          text={displayedBroadcast.text}
+                          citedMarkets={displayedCitedMarkets}
+                          focusedMarketId={focusedMarketId}
+                          onMarketSelect={handleMarketSelect}
+                        />
                       </div>
                     )}
                   </div>
@@ -513,7 +640,16 @@ export default function App() {
                           : "bg-zinc-900 border border-white/5 text-slate-200 rounded-tl-none"
                       }`}
                     >
-                      {formatMarketText(ch.text)}
+                      {ch.sender === "gemini" && ch.cited_markets && ch.cited_markets.length > 0 ? (
+                        <AgentMessage
+                          text={ch.text}
+                          citedMarkets={enrichCited(ch.cited_markets)}
+                          focusedMarketId={focusedMarketId}
+                          onMarketSelect={handleMarketSelect}
+                        />
+                      ) : (
+                        formatMarketText(ch.text)
+                      )}
                       {ch.model && (
                         <span className="block mt-1 text-[8px] font-mono text-slate-500 text-right">
                           model: {ch.model}
@@ -664,53 +800,34 @@ export default function App() {
                     Loading prediction sheets...
                   </div>
                 ) : (
-                  (Object.entries(prices) as [string, any][])
-                    .map(([mId, pInfo]) => ({
-                      market_id: mId,
-                      price: pInfo.price,
-                      delta5m: pInfo.delta5m,
-                      delta2m: pInfo.delta2m,
-                      label: pInfo.label || marketLabels[mId] || pInfo.question || `Market ${mId}`,
-                      type: pInfo.type,
-                    }))
-                    // Sort by absolute delta5m descending
-                    .sort((a, b) => Math.abs(b.delta5m) - Math.abs(a.delta5m))
-                    .map((item) => {
-                      const isGlowing = recentGlows[item.market_id];
-                      return (
-                        <div 
-                          key={item.market_id}
-                          className={`p-3 border rounded-xl flex flex-col gap-2 transition-all duration-500 ${
-                            isGlowing 
-                              ? "bg-yellow-500/10 border-yellow-500/40 shadow-[0_0_20px_rgba(234,179,8,0.2)] scale-[1.01]" 
-                              : "bg-white/[0.02] border-white/5 hover:border-white/10"
-                          }`}
-                        >
-                          <div className="flex justify-between items-start gap-2">
-                            <span className="text-[11px] font-sans font-medium text-slate-300 leading-normal line-clamp-2">
-                              {item.label}
-                            </span>
-                            <span className="text-xs font-mono font-bold text-cyan-400 shrink-0">
-                              {item.price}c
-                            </span>
-                          </div>
-
-                          <div className="flex justify-between items-center text-[9px] font-mono">
-                            <span className="text-slate-500 truncate max-w-[55%]">
-                              {item.type ? item.type.replace(/_/g, " ") : "market"}
-                            </span>
-                            <div className="flex gap-2">
-                              <span className={item.delta2m >= 0 ? "text-emerald-400" : "text-rose-400"}>
-                                2m: {item.delta2m >= 0 ? "+" : ""}{item.delta2m}c
-                              </span>
-                              <span className={`font-bold ${item.delta5m >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                                5m: {item.delta5m >= 0 ? "+" : ""}{item.delta5m}c
-                              </span>
-                            </div>
-                          </div>
+                  <>
+                    {displayedCitedMarkets.length > 0 && (
+                      <div className="space-y-2 pb-2 border-b border-cyan-500/20">
+                        <div className="flex items-center gap-1.5 px-1">
+                          <Sparkles className="w-3 h-3 text-cyan-400" />
+                          <span className="text-[9px] font-mono uppercase tracking-widest text-cyan-400 font-bold">
+                            Cited by EdgeCast
+                          </span>
                         </div>
-                      );
-                    })
+                        {displayedCitedMarkets.map((cite) => {
+                          const live = sortedMarkets.find((m) => m.market_id === cite.market_id);
+                          if (live) return renderMarketCard(live, true);
+                          return renderMarketCard({
+                            market_id: cite.market_id,
+                            price: cite.price_c ?? 0,
+                            delta5m: 0,
+                            delta2m: 0,
+                            label: cite.label,
+                            polymarket_url: cite.polymarket_url,
+                          }, true);
+                        })}
+                      </div>
+                    )}
+
+                    {sortedMarkets
+                      .filter((item) => !agentCitedIds.has(item.market_id))
+                      .map((item) => renderMarketCard(item))}
+                  </>
                 )}
               </div>
             </section>

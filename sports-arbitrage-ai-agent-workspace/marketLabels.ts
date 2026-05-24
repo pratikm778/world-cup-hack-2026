@@ -5,6 +5,8 @@ export type MarketRecord = {
   metadata?: {
     group_item_title?: string;
     event_group?: string;
+    slug?: string;
+    event_slug?: string;
   };
 };
 
@@ -12,6 +14,9 @@ export type MarketCatalogEntry = {
   label: string;
   question: string;
   type?: string;
+  slug?: string;
+  event_slug?: string;
+  polymarket_url?: string;
 };
 
 /** Human-readable label for a Polymarket contract. */
@@ -69,6 +74,14 @@ export function formatMarketLabel(market: MarketRecord): string {
   return question.replace(/\?$/, "").slice(0, 80);
 }
 
+function polymarketUrl(market: MarketRecord): string | undefined {
+  const slug = market.metadata?.slug;
+  const eventSlug = market.metadata?.event_slug;
+  const path = slug || eventSlug;
+  if (!path) return undefined;
+  return `https://polymarket.com/event/${encodeURIComponent(path)}`;
+}
+
 export function buildMarketCatalog(
   markets: MarketRecord[],
 ): Record<string, MarketCatalogEntry> {
@@ -78,6 +91,9 @@ export function buildMarketCatalog(
       label: formatMarketLabel(market),
       question: market.question,
       type: market.sports_market_type,
+      slug: market.metadata?.slug,
+      event_slug: market.metadata?.event_slug,
+      polymarket_url: polymarketUrl(market),
     };
   }
   return catalog;

@@ -16,6 +16,7 @@ import {
   loadAgentInstructions,
 } from "./localAgentTick.js";
 import { filterFeasibleMovers, isMarketFeasible, scoreAtMinute } from "./matchState.js";
+import { parseAgentMessage, enrichCitedFromPrices } from "./marketRefs.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 dotenv.config({ path: path.join(repoRoot, ".env") });
@@ -58,6 +59,19 @@ function loadMarketCatalog(matchId: string): Record<string, MarketCatalogEntry> 
     fs.readFileSync(path.join(matchDir, "markets.json"), "utf8"),
   ) as MarketRecord[];
   return buildMarketCatalog(markets);
+}
+
+function formatAgentMessagePayload(
+  rawText: string,
+  catalog: Record<string, MarketCatalogEntry>,
+  prices?: Record<string, { price?: number; label?: string }>,
+) {
+  const parsed = parseAgentMessage(rawText, catalog);
+  const text = substituteMarketIdsInText(parsed.displayText, catalog);
+  const cited_markets = prices
+    ? enrichCitedFromPrices(parsed.cited_markets, prices)
+    : parsed.cited_markets;
+  return { text, cited_markets };
 }
 
 async function startServer() {
@@ -149,6 +163,8 @@ async function startServer() {
         label: string;
         question: string;
         type?: string;
+        slug?: string;
+        polymarket_url?: string;
       }> = {};
       for (const m of markets) {
         const tokenId = yesToken(markets, m.market_id);
@@ -174,6 +190,8 @@ async function startServer() {
           label: catalogEntry?.label || m.question,
           question: m.question,
           type: catalogEntry?.type || m.sports_market_type,
+          slug: catalogEntry?.slug,
+          polymarket_url: catalogEntry?.polymarket_url,
         };
       }
 
@@ -374,11 +392,13 @@ async function startServer() {
             } else if (txt.includes("moving") || txt.includes("delta") || txt.includes("corners") || txt.includes("pressure")) {
               urgency = "movement";
             }
+            const formatted = formatAgentMessagePayload(b.text, broadcastMarketCatalog);
             broadcastSse({
               type: "broadcast",
               minute: b.match_minute,
-              text: substituteMarketIdsInText(b.text, broadcastMarketCatalog),
-              urgency
+              text: formatted.text,
+              cited_markets: formatted.cited_markets,
+              urgency,
             });
           });
           lastSeenBroadcasts = broadcasts.length;
@@ -403,15 +423,16 @@ async function startServer() {
       const text = await callGmiTickBroadcast(agentInstructions, payload);
       if (!text.trim()) return;
 
-      const sanitized = substituteMarketIdsInText(text.trim(), broadcastMarketCatalog);
-      localPriorBroadcasts.push({ match_minute: nowMinute, text: sanitized });
+      const formatted = formatAgentMessagePayload(text.trim(), broadcastMarketCatalog);
+      localPriorBroadcasts.push({ match_minute: nowMinute, text: formatted.text });
       broadcastSse({
         type: "broadcast",
         minute: nowMinute,
-        text: sanitized,
+        text: formatted.text,
+        cited_markets: formatted.cited_markets,
         urgency: "movement",
       });
-      console.log(`Local agent tick @ ${nowMinute.toFixed(1)}' → broadcast (${sanitized.slice(0, 80)}...)`);
+      console.log(`Local agent tick @ ${nowMinute.toFixed(1)}' → broadcast (${formatted.text.slice(0, 80)}...)`);
     } catch (err) {
       console.warn("Local agent tick failed:", err);
     }
@@ -508,8 +529,8 @@ async function startServer() {
     const matchId = process.env.EDGECAST_MATCH_ID || "ars-man-2026-04-19";
     const marketCatalog = loadMarketCatalog(matchId);
 
-    function sanitizeAnswer(answer: string): string {
-      return substituteMarketIdsInText(answer, marketCatalog);
+    function sanitizeAnswer(answer: string, prices?: Record<string, { price?: number; label?: string }>) {
+      return formatAgentMessagePayload(answer, marketCatalog, prices);
     }
 
     if (!question?.trim()) {
@@ -517,6 +538,10 @@ async function startServer() {
     }
 
     const snapshot = buildTickSnapshot(matchId, match_minute || 0);
+    const chatPrices: Record<string, { price?: number; label?: string }> = {};
+    for (const m of snapshot.polymarket_top_movers || []) {
+      chatPrices[m.market_id] = { price: m.close_c, label: m.question };
+    }
 
     try {
       const agentRes = await fetch("http://localhost:8765/agent/chat", {
@@ -531,8 +556,10 @@ async function startServer() {
 
       if (agentRes.ok) {
         const data = await agentRes.json();
+        const formatted = sanitizeAnswer(data.answer || "", chatPrices);
         return res.json({
-          answer: sanitizeAnswer(data.answer || ""),
+          answer: formatted.text,
+          cited_markets: formatted.cited_markets,
           modelUsed: data.modelUsed || "gemini-3.5-flash (via RocketRide)",
           timestamp: new Date().toISOString(),
           chat_turns: data.chat_turns,
@@ -563,13 +590,15 @@ async function startServer() {
 
       if (response.ok) {
         const result = await response.json();
-        const answer = sanitizeAnswer(
+        const formatted = sanitizeAnswer(
           extractRocketRideAnswer(result) || "No response generated by RocketRide.",
+          chatPrices,
         );
         res.json({
-          answer,
+          answer: formatted.text,
+          cited_markets: formatted.cited_markets,
           modelUsed: "gemini-3.5-flash (via RocketRide)",
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } else {
         throw new Error(`RocketRide webhook responded with status ${response.status}`);
@@ -578,15 +607,16 @@ async function startServer() {
       console.warn("RocketRide webhook offline. Trying direct GMI fallback.", err?.message || err);
 
       try {
-        const answer = sanitizeAnswer(await callGmiChatDirect(
+        const formatted = sanitizeAnswer(await callGmiChatDirect(
           question,
           match_minute || 0,
           {},
           snapshot.new_commentary || [],
           snapshot.new_key_events || [],
-        ));
+        ), chatPrices);
         return res.json({
-          answer,
+          answer: formatted.text,
+          cited_markets: formatted.cited_markets,
           modelUsed: "google/gemini-3.5-flash (direct GMI fallback)",
           timestamp: new Date().toISOString(),
         });
@@ -604,10 +634,12 @@ async function startServer() {
         answer = "Our live spotter notes high offensive pressure from Manchester City. However, the over 2.5 goals contract remains stable at 40c, implying a low scoring velocity. Expect late game transitions.";
       }
       
+      const formatted = sanitizeAnswer(answer, chatPrices);
       res.json({
-        answer: sanitizeAnswer(answer),
+        answer: formatted.text,
+        cited_markets: formatted.cited_markets,
         modelUsed: "Heuristic Local Engine (RocketRide Offline)",
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   });
