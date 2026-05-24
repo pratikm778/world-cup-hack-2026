@@ -4,13 +4,13 @@
     "y": 0,
     "zoom": 1
   },
-  "name": "GMI ranker",
-  "description": "Ranks Polymarket candidates with GMI Cloud through RocketRide.",
+  "name": "Exa search",
+  "description": "Searches Exa through RocketRide.",
   "components": [
     {
       "id": "chat_1",
       "provider": "chat",
-      "name": "Ranking prompt",
+      "name": "Chat Query",
       "config": {
         "hideForm": true,
         "mode": "Source",
@@ -38,18 +38,17 @@
       }
     },
     {
-      "id": "llm_gmi_cloud_1",
-      "provider": "llm_gmi_cloud",
-      "name": "GMI Cloud",
+      "id": "tool_exa_search_1",
+      "provider": "tool_exa_search",
+      "name": "Exa Search",
       "config": {
-        "profile": "custom",
-        "custom": {
-          "model": "google/gemma-4-31b-it",
-          "serverbase": "https://api.gmi-serving.com/v1",
-          "apikey": "${ROCKETRIDE_GMI_API_KEY}",
-          "modelTotalTokens": 16384
-        },
-        "parameters": {}
+        "apikey": "${ROCKETRIDE_EXA_KEY}",
+        "includeText": true,
+        "numResults": 10,
+        "searchType": "auto",
+        "type": "tool_exa_search",
+        "useAutoprompt": true,
+        "name": "Exa Search"
       },
       "input": [
         {
@@ -67,9 +66,9 @@
           "height": 96
         },
         "data": {
-          "provider": "llm_gmi_cloud",
+          "provider": "tool_exa_search",
           "class": [
-            "llm"
+            "tool"
           ],
           "type": "default",
           "content": ""
@@ -87,7 +86,7 @@
       "input": [
         {
           "lane": "answers",
-          "from": "llm_gmi_cloud_1"
+          "from": "tool_exa_search_1"
         }
       ],
       "ui": {
@@ -102,7 +101,7 @@
         "data": {
           "provider": "response_answers",
           "class": [
-            "target"
+            "sink"
           ],
           "type": "default",
           "content": ""
@@ -111,7 +110,13 @@
       }
     }
   ],
-  "source": "chat_1",
-  "project_id": "9f2a6f43-64f8-4d97-88d2-9f8bf6a97743",
-  "version": 1
+  "project_id": "71ccb6ee-7db8-4d02-bdf1-7c4b8443d5e3",
+  "isLocked": false,
+  "snapToGrid": true,
+  "snapGridSize": [
+    10,
+    10
+  ],
+  "version": 1,
+  "docRevision": 1
 }

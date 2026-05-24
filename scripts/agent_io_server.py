@@ -95,8 +95,8 @@ def current_match_minute() -> float:
         elapsed = datetime.now(timezone.utc).timestamp() - float(_replay["anchor_real"])
         # Default: 1 real second = 1 match-minute / 6 (i.e. 6s real = 1 match-min, per SPEC).
         speed = float(os.environ.get("EDGECAST_REPLAY_SPEED", "10"))
-        return float(_replay["anchor_minute"]) + elapsed * (speed / 60.0)
-    return ts_to_minute(MATCH_ID, datetime.now(timezone.utc))
+        return min(90.0, float(_replay["anchor_minute"]) + elapsed * (speed / 60.0))
+    return 0.0
 
 
 def compute_top_movers(now_minute: float, lookback: float, k: int) -> list[dict[str, Any]]:

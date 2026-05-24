@@ -9,8 +9,8 @@ from env_loader import load_dotenv
 
 load_dotenv()
 
-DEFAULT_PIPE = Path(__file__).resolve().parent / "rocketride-server" / "pipelines" / "exa-search-working.pipe"
-DEFAULT_GMI_PIPE = Path(__file__).resolve().parent / "rocketride-server" / "pipelines" / "gmi-ranker-working.pipe"
+DEFAULT_PIPE = Path(__file__).resolve().parent / "exa-search-working.pipe"
+DEFAULT_GMI_PIPE = Path(__file__).resolve().parent / "gmi-ranker-working.pipe"
 
 
 async def run_exa_search(

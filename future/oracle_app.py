@@ -729,6 +729,30 @@ def analyze():
         f"latest live football commentary play by play momentum shots dangerous attacks {match}"
     )
 
+    try:
+        market_data = find_polymarket_events(market)
+    except Exception:
+        app.logger.exception("polymarket gamma ingestion failed")
+        market_data = safe_query_search_api("market", f"latest Polymarket odds probability market {market}")
+    signal = make_signal(match, commentary, market_data)
+
+    if send_alert and signal.status == "alpha":
+        signal.whatsapp = send_whatsapp(signal.alert_message)
+    elif send_alert:
+        signal.whatsapp = {"sent": False, "reason": "signal is not strong enough to alert"}
+
+    return jsonify(
+        {
+            "status": "ok",
+            "latency_seconds": round(time.time() - started, 2),
+            "signal": signal.__dict__,
+            "sources": {
+                "commentary": unwrap_rocketride_search(commentary),
+                "market": market_data if market_data.get("source") == "polymarket_gamma" else unwrap_rocketride_search(market_data),
+            },
+        }
+    )
+
 
 @app.post("/api/top-bets")
 def top_bets():
@@ -760,29 +784,6 @@ def top_bets():
             "latency_seconds": round(time.time() - started, 2),
             "reasoning": reasoning,
             "candidates": candidates,
-        }
-    )
-    try:
-        market_data = find_polymarket_events(market)
-    except Exception:
-        app.logger.exception("polymarket gamma ingestion failed")
-        market_data = safe_query_search_api("market", f"latest Polymarket odds probability market {market}")
-    signal = make_signal(match, commentary, market_data)
-
-    if send_alert and signal.status == "alpha":
-        signal.whatsapp = send_whatsapp(signal.alert_message)
-    elif send_alert:
-        signal.whatsapp = {"sent": False, "reason": "signal is not strong enough to alert"}
-
-    return jsonify(
-        {
-            "status": "ok",
-            "latency_seconds": round(time.time() - started, 2),
-            "signal": signal.__dict__,
-            "sources": {
-                "commentary": unwrap_rocketride_search(commentary),
-                "market": market_data if market_data.get("source") == "polymarket_gamma" else unwrap_rocketride_search(market_data),
-            },
         }
     )
 
