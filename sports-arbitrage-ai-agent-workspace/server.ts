@@ -13,9 +13,9 @@ import {
 import { runSignalDeskSearch } from "./polymarketSignalDesk.js";
 import {
   callGmiTickBroadcast,
-  heuristicTickBroadcast,
   loadAgentInstructions,
 } from "./localAgentTick.js";
+import { filterFeasibleMovers, isMarketFeasible, scoreAtMinute } from "./matchState.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 dotenv.config({ path: path.join(repoRoot, ".env") });
@@ -124,6 +124,7 @@ async function startServer() {
       const commentary = JSON.parse(fs.readFileSync(path.join(matchDir, "commentary.json"), "utf8"));
 
       const kickoffTime = new Date(meta.kickoff_utc).getTime();
+      const matchScore = scoreAtMinute(matchDir, nowMinute);
 
       const activeCommentary = commentary
         .filter((c: any) => {
@@ -161,6 +162,7 @@ async function startServer() {
         points.sort((a: any, b: any) => new Date(a.ts_utc).getTime() - new Date(b.ts_utc).getTime());
 
         const currentPrice = getPriceAtMinute(points, kickoffTime, nowMinute);
+        if (!isMarketFeasible(m, nowMinute, matchScore, currentPrice)) continue;
         const prevPrice5m = getPriceAtMinute(points, kickoffTime, Math.max(0, nowMinute - 5));
         const prevPrice2m = getPriceAtMinute(points, kickoffTime, Math.max(0, nowMinute - 2));
         const catalogEntry = marketCatalog[m.market_id];
@@ -183,6 +185,7 @@ async function startServer() {
         minute: nowMinute,
         match_id: matchId,
         teams: { home: meta.home, away: meta.away },
+        score: matchScore,
         last_events: activeEvents,
         commentary: activeCommentary,
         prices,
@@ -267,7 +270,7 @@ async function startServer() {
     const kickoffTime = new Date(meta.kickoff_utc).getTime();
     const lookback = TICK_GAME_MINUTES;
 
-    const polymarket_top_movers = markets
+    const rawMovers = markets
       .map((m: any) => {
         const tokenId = yesToken(markets, m.market_id);
         if (!tokenId) return null;
@@ -287,7 +290,15 @@ async function startServer() {
       })
       .filter(Boolean)
       .sort((a: any, b: any) => Math.abs(b.delta_c) - Math.abs(a.delta_c))
-      .slice(0, 5);
+      .slice(0, 12);
+
+    const polymarket_top_movers = filterFeasibleMovers(
+      matchDir,
+      nowMinute,
+      rawMovers as any[],
+      markets,
+    ).slice(0, 5);
+    const match_score = scoreAtMinute(matchDir, nowMinute);
 
     const sinceMinute = Math.max(0, nowMinute - lookback);
     const new_key_events = keyEvents
@@ -303,12 +314,17 @@ async function startServer() {
     return {
       match_id: matchId,
       match_minute: Math.round(nowMinute * 10) / 10,
+      match_score,
       since_minute: sinceMinute,
       lookback_min: lookback,
       polymarket_top_movers,
       new_key_events,
       new_commentary,
       prior_broadcasts: localPriorBroadcasts.slice(-5),
+      hint:
+        "Surface ONE game-linked OPPORTUNITY or return empty string. Use match_score " +
+        "to ignore dead markets (at 1-1 never cite 0-0, 1-0, or 0-1 exact score). " +
+        "Lead with pitch read, not raw price movement.",
     };
   }
 
@@ -382,10 +398,7 @@ async function startServer() {
 
     try {
       const payload = buildTickSnapshot(defaultMatchId, nowMinute);
-      let text = await callGmiTickBroadcast(agentInstructions, payload);
-      if (!text) {
-        text = heuristicTickBroadcast(payload.polymarket_top_movers as any[], nowMinute) || "";
-      }
+      const text = await callGmiTickBroadcast(agentInstructions, payload);
       if (!text.trim()) return;
 
       const sanitized = substituteMarketIdsInText(text.trim(), broadcastMarketCatalog);
@@ -487,9 +500,9 @@ async function startServer() {
     return answer;
   }
 
-  // Free-form Gemini Chat routed via RocketRide
+  // Chat routed through agent_io_server for shared memory + rich context
   app.post("/api/chat", async (req, res) => {
-    const { question, match_minute, prices, commentary, key_events } = req.body;
+    const { question, match_minute } = req.body;
     const matchId = process.env.EDGECAST_MATCH_ID || "ars-man-2026-04-19";
     const marketCatalog = loadMarketCatalog(matchId);
 
@@ -497,25 +510,47 @@ async function startServer() {
       return substituteMarketIdsInText(answer, marketCatalog);
     }
 
+    if (!question?.trim()) {
+      return res.status(400).json({ error: "question is required" });
+    }
+
+    const snapshot = buildTickSnapshot(matchId, match_minute || 0);
+
+    try {
+      const agentRes = await fetch("http://localhost:8765/agent/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: question.trim(),
+          match_minute: match_minute ?? 0,
+        }),
+        signal: AbortSignal.timeout(45000),
+      });
+
+      if (agentRes.ok) {
+        const data = await agentRes.json();
+        return res.json({
+          answer: sanitizeAnswer(data.answer || ""),
+          modelUsed: data.modelUsed || "gemini-3.5-flash (via RocketRide)",
+          timestamp: new Date().toISOString(),
+          chat_turns: data.chat_turns,
+        });
+      }
+
+      const errText = await agentRes.text();
+      throw new Error(`agent_io_server /agent/chat ${agentRes.status}: ${errText.slice(0, 200)}`);
+    } catch (err: any) {
+      console.warn("agent_io_server chat failed, trying direct webhook.", err?.message || err);
+    }
+
     try {
       const webhookUrl = process.env.EDGECAST_WEBHOOK_URL || "http://localhost:8080/api/pipelines/test.pipe/webhook";
 
       const payload = {
-        match_id: matchId,
-        match_minute: match_minute || 0,
-        since_minute: Math.max(0, (match_minute || 0) - 5),
-        lookback_min: 5,
-        new_key_events: key_events || [],
-        new_commentary: commentary || [],
-        polymarket_top_movers: Object.keys(prices || {}).map(mId => ({
-          market_id: mId,
-          question: prices[mId]?.label || prices[mId]?.question || marketCatalog[mId]?.label || mId,
-          open_c: Math.round(prices[mId]?.price - prices[mId]?.delta5m) || 50,
-          close_c: Math.round(prices[mId]?.price) || 50,
-          delta_c: Math.round(prices[mId]?.delta5m) || 0
-        })).slice(0, 5),
-        question: question,
-        hint: `The trader asked a live question: "${question}". Please answer this specific question in 3-5 sentences max, trader-terse, citing specific prices when relevant. Use market names, not numeric IDs. Do not suggest orders.`
+        mode: "chat",
+        ...snapshot,
+        question: question.trim(),
+        hint: `Trader question: "${question}". Answer in 3–5 sentences with pitch read and cent prices.`,
       };
 
       const response = await fetch(webhookUrl, {
@@ -544,9 +579,9 @@ async function startServer() {
         const answer = sanitizeAnswer(await callGmiChatDirect(
           question,
           match_minute || 0,
-          prices || {},
-          commentary || [],
-          key_events || [],
+          {},
+          snapshot.new_commentary || [],
+          snapshot.new_key_events || [],
         ));
         return res.json({
           answer,

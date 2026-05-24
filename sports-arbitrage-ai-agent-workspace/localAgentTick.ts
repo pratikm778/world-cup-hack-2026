@@ -26,20 +26,6 @@ export type TopMover = {
   delta_c: number;
 };
 
-export function heuristicTickBroadcast(
-  topMovers: TopMover[],
-  matchMinute: number,
-): string | null {
-  if (!topMovers.length) return null;
-  const top = topMovers[0];
-  if (Math.abs(top.delta_c) < 2) return null;
-  const sign = top.delta_c >= 0 ? "+" : "";
-  return (
-    `${Math.floor(matchMinute)}' MOVEMENT — ${top.question} shifted ${sign}${top.delta_c}c ` +
-    `(now ${top.close_c}c) over the last 5 minutes. Worth watching for lag vs pitch action.`
-  );
-}
-
 export async function callGmiTickBroadcast(
   instructions: string,
   payload: Record<string, unknown>,

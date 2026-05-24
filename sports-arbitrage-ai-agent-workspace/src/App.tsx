@@ -228,9 +228,6 @@ export default function App() {
         body: JSON.stringify({
           question: userText,
           match_minute: currentMinute,
-          prices: prices,
-          commentary: commentary.slice(0, 10),
-          key_events: keyEvents.slice(0, 5)
         })
       });
 

@@ -25,9 +25,11 @@ from datetime import datetime, timezone
 from typing import Any
 
 import httpx
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Body, FastAPI, HTTPException, Query
 
 from scripts.tools.events_commentary_lookup import events_commentary_lookup
+from scripts.tools.match_context import build_match_context
+from scripts.tools.match_state import filter_feasible_movers, score_at_minute
 from scripts.tools.market_state_lookup import market_state_lookup
 from scripts.tools.match_helpers import (
     kickoff,
@@ -50,6 +52,9 @@ WEBHOOK_URL = os.environ.get(
 LOOKBACK_MIN = float(os.environ.get("EDGECAST_LOOKBACK_MIN", "5"))
 TICK_ENABLED = os.environ.get("EDGECAST_TICK_ENABLED", "1") == "1"
 TOP_MOVERS = int(os.environ.get("EDGECAST_TOP_MOVERS", "5"))
+CONTEXT_RECENT_MIN = float(os.environ.get("EDGECAST_CONTEXT_RECENT_MIN", "15"))
+CHAT_HISTORY_MAX = int(os.environ.get("EDGECAST_CHAT_HISTORY", "20"))
+CHAT_IN_TICK_MAX = int(os.environ.get("EDGECAST_CHAT_IN_TICK", "6"))
 
 # Replay clock: wall-clock is meaningless for a match that happened in April.
 # /replay/start anchors a match-minute to a real instant; tick loop and
@@ -68,6 +73,7 @@ if _fake:
 # agent, so it can tell new events apart from repeats inside the 5-min window.
 BROADCAST_HISTORY_MAX = int(os.environ.get("EDGECAST_BROADCAST_HISTORY", "10"))
 _broadcast_history: deque[dict[str, Any]] = deque(maxlen=BROADCAST_HISTORY_MAX)
+_chat_history: deque[dict[str, Any]] = deque(maxlen=CHAT_HISTORY_MAX)
 _seen_event_ids: set[str] = set()
 _last_tick_bucket: int = -1
 
@@ -129,7 +135,11 @@ def compute_top_movers(now_minute: float, lookback: float, k: int) -> list[dict[
             }
         )
     rows.sort(key=lambda x: abs(x["delta_c"]), reverse=True)
-    return rows[:k]
+    return filter_feasible_movers(MATCH_ID, now_minute, rows[:k])
+
+
+def _recent_chat_turns(limit: int = CHAT_IN_TICK_MAX) -> list[dict[str, Any]]:
+    return list(_chat_history)[-limit:]
 
 
 def build_tick_payload(now: datetime, lookback_min: float | None = None) -> dict[str, Any]:
@@ -141,6 +151,12 @@ def build_tick_payload(now: datetime, lookback_min: float | None = None) -> dict
     lookback = lookback_min if lookback_min is not None else max(LOOKBACK_MIN, TICK_GAME_MINUTES)
     since_minute = max(0.0, now_minute - lookback)
 
+    match_score = score_at_minute(MATCH_ID, now_minute)
+    match_context = build_match_context(
+        MATCH_ID,
+        now_minute,
+        recent_minutes=CONTEXT_RECENT_MIN,
+    )
     ec = events_commentary_lookup(MATCH_ID, since_minute, now_minute, "both")
     movers = compute_top_movers(now_minute, lookback, TOP_MOVERS)
 
@@ -155,9 +171,12 @@ def build_tick_payload(now: datetime, lookback_min: float | None = None) -> dict
             _seen_event_ids.add(e["id"])
 
     return {
+        "mode": "tick",
         "match_id": MATCH_ID,
         "tick_ts": now.isoformat(),
         "match_minute": round(now_minute, 2),
+        "match_score": match_score,
+        "match_context": match_context,
         "since_minute": round(since_minute, 2),
         "lookback_min": round(lookback, 2),
         "new_key_events": window_events,
@@ -165,14 +184,65 @@ def build_tick_payload(now: datetime, lookback_min: float | None = None) -> dict
         "polymarket_top_movers": movers,
         "previously_seen_key_event_ids": previously_seen_in_window,
         "prior_broadcasts": list(_broadcast_history),
+        "chat_history": _recent_chat_turns(),
         "hint": (
             "You are EdgeCast — game-intelligence copilot. Surface ONE "
             "OPPORTUNITY if game trends and market prices look misaligned "
             "(not a raw price ticker). Connect pitch read → markets at Xc → "
-            "why it is interesting. Otherwise return empty string. Dedup "
-            "against previously_seen_key_event_ids and prior_broadcasts."
+            "why it is interesting. match_context holds the full match story "
+            "up to now (goals, cards, subs, highlight commentary). "
+            "chat_history holds recent trader questions — factor them in if "
+            "relevant. Use match_score to ignore dead markets. Otherwise "
+            "return empty string. Dedup against previously_seen_key_event_ids "
+            "and prior_broadcasts."
         ),
     }
+
+
+def build_chat_payload(question: str, minute: float | None = None) -> dict[str, Any]:
+    """Rich one-shot chat payload with full match context + conversation memory."""
+    now = datetime.now(timezone.utc)
+    now_minute = current_match_minute() if minute is None else float(minute)
+    lookback = max(LOOKBACK_MIN, TICK_GAME_MINUTES)
+    since_minute = max(0.0, now_minute - lookback)
+    match_score = score_at_minute(MATCH_ID, now_minute)
+    match_context = build_match_context(MATCH_ID, now_minute, recent_minutes=CONTEXT_RECENT_MIN)
+    ec = events_commentary_lookup(MATCH_ID, since_minute, now_minute, "both")
+    movers = compute_top_movers(now_minute, lookback, TOP_MOVERS)
+
+    return {
+        "mode": "chat",
+        "match_id": MATCH_ID,
+        "tick_ts": now.isoformat(),
+        "match_minute": round(now_minute, 2),
+        "match_score": match_score,
+        "match_context": match_context,
+        "question": question,
+        "since_minute": round(since_minute, 2),
+        "lookback_min": round(lookback, 2),
+        "new_key_events": ec.get("events", []),
+        "new_commentary": ec.get("commentary", []),
+        "polymarket_top_movers": movers,
+        "prior_broadcasts": list(_broadcast_history),
+        "chat_history": list(_chat_history),
+        "hint": (
+            f'Trader question: "{question}". Answer in 3–5 sentences using '
+            "match_context, match_score, chat_history, and cent prices. "
+            "Reference prior chat turns when the question is follow-up. "
+            "Use tools for deeper windows if needed. Do not suggest orders."
+        ),
+    }
+
+
+async def _post_webhook(payload: dict[str, Any], client: httpx.AsyncClient) -> str:
+    r = await client.post(WEBHOOK_URL, json=payload)
+    log.info("webhook %s %s", r.status_code, r.text[:120] if r.text else "")
+    if r.status_code >= 300 or not r.text:
+        return ""
+    try:
+        return _extract_broadcast(r.json())
+    except (json.JSONDecodeError, ValueError):
+        return r.text.strip()
 
 
 async def _fire_tick(client: httpx.AsyncClient) -> None:
@@ -185,22 +255,17 @@ async def _fire_tick(client: httpx.AsyncClient) -> None:
         len(payload["new_key_events"]),
         len(payload["new_commentary"]),
     )
-    r = await client.post(WEBHOOK_URL, json=payload)
-    log.info("webhook %s %s", r.status_code, r.text[:120] if r.text else "")
-    if r.status_code < 300 and r.text:
-        try:
-            broadcast_text = _extract_broadcast(r.json())
-        except (json.JSONDecodeError, ValueError):
-            broadcast_text = r.text.strip()
-        if broadcast_text:
-            top = payload["polymarket_top_movers"]
-            _broadcast_history.append({
-                "tick_ts": payload["tick_ts"],
-                "match_minute": payload["match_minute"],
-                "text": broadcast_text,
-                "top_market_id": top[0]["market_id"] if top else None,
-            })
-            log.info("broadcast captured (%d in history)", len(_broadcast_history))
+    r = await _post_webhook(payload, client)
+    if r:
+        broadcast_text = r
+        top = payload["polymarket_top_movers"]
+        _broadcast_history.append({
+            "tick_ts": payload["tick_ts"],
+            "match_minute": payload["match_minute"],
+            "text": broadcast_text,
+            "top_market_id": top[0]["market_id"] if top else None,
+        })
+        log.info("broadcast captured (%d in history)", len(_broadcast_history))
 
 
 async def tick_loop() -> None:
@@ -294,6 +359,7 @@ def _reset_memory() -> None:
     """Clear cross-tick memory so a fresh replay does not see stale dedup state."""
     global _last_tick_bucket
     _broadcast_history.clear()
+    _chat_history.clear()
     _seen_event_ids.clear()
     _last_tick_bucket = -1
 
@@ -328,7 +394,46 @@ def agent_memory() -> dict[str, Any]:
     """Inspect cross-tick memory — useful for debugging dedup behavior."""
     return {
         "broadcast_history": list(_broadcast_history),
+        "chat_history": list(_chat_history),
         "seen_event_count": len(_seen_event_ids),
+        "broadcast_history_max": BROADCAST_HISTORY_MAX,
+        "chat_history_max": CHAT_HISTORY_MAX,
+    }
+
+
+@app.post("/agent/chat")
+async def agent_chat(body: dict[str, Any] = Body(...)) -> dict[str, Any]:
+    """Chat with memory: stores Q&A in _chat_history and routes via RocketRide webhook."""
+    question = (body.get("question") or "").strip()
+    if not question:
+        raise HTTPException(400, "question is required")
+
+    minute_raw = body.get("match_minute")
+    minute = float(minute_raw) if minute_raw is not None else None
+    payload = build_chat_payload(question, minute)
+    question_minute = payload["match_minute"]
+
+    async with httpx.AsyncClient(timeout=45) as client:
+        answer = await _post_webhook(payload, client)
+
+    if not answer:
+        raise HTTPException(502, "RocketRide webhook returned no answer")
+
+    _chat_history.append({
+        "role": "user",
+        "match_minute": question_minute,
+        "text": question,
+    })
+    _chat_history.append({
+        "role": "assistant",
+        "match_minute": question_minute,
+        "text": answer,
+    })
+
+    return {
+        "answer": answer,
+        "modelUsed": "gemini-3.5-flash (via RocketRide)",
+        "chat_turns": len(_chat_history),
     }
 
 
