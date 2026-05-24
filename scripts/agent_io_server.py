@@ -165,11 +165,11 @@ def build_tick_payload(now: datetime, last_tick: datetime | None) -> dict[str, A
         "previously_seen_key_event_ids": previously_seen_in_window,
         "prior_broadcasts": list(_broadcast_history),
         "hint": (
-            "You are EdgeCast. If anything above is broadcast-worthy "
-            "(a goal, card, significant market move, ≥5c delta), produce ONE "
-            "trader-terse alert. Otherwise return an empty string. Use the "
-            "lookup tools for deeper context only if needed. Dedup against "
-            "previously_seen_key_event_ids and prior_broadcasts."
+            "You are EdgeCast — game-intelligence copilot. Surface ONE "
+            "OPPORTUNITY if game trends and market prices look misaligned "
+            "(not a raw price ticker). Connect pitch read → markets at Xc → "
+            "why it is interesting. Otherwise return empty string. Dedup "
+            "against previously_seen_key_event_ids and prior_broadcasts."
         ),
     }
 
