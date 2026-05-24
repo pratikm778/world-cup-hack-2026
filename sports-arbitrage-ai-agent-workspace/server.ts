@@ -251,7 +251,7 @@ async function startServer() {
     if (minute === 0) {
       resetBroadcastMemory();
     } else {
-      lastLocalTickBucket = gameTickBucket(minute);
+      lastLocalTickBucket = gameTickBucket(minute) - 1;
     }
     res.json({ now_minute: minute, mode: "fixed", simulated: true });
   });
@@ -410,8 +410,11 @@ async function startServer() {
       // agent IO server offline — use local tick fallback below
     }
 
-    if (agentOnline) return;
-    if (localReplay.fixedMinute !== null || localReplay.anchorMinute === null) return;
+      if (agentOnline) {
+        // Agent IO handles ticks when online; local fallback only if it is offline.
+        return;
+      }
+      if (localReplay.fixedMinute !== null || localReplay.anchorMinute === null) return;
 
     const nowMinute = currentLocalMatchMinute();
     const bucket = gameTickBucket(nowMinute);

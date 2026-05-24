@@ -2,6 +2,7 @@
 
   • GET  /market/{market_id}/window  → market_state_lookup
   • GET  /events_window              → events_commentary_lookup
+  • GET  /knowledge/search           → knowledge_lookup (historical KB)
   • Background task: every EDGECAST_TICK_GAME_MINUTES of match time, builds
     a tick payload from the window since the last interval + polymarket movers,
     POSTs it to the RocketRide webhook so test.pipe fires.
@@ -19,15 +20,22 @@ import asyncio
 import json
 import logging
 import os
+import re
 from collections import deque
+from functools import lru_cache
+from pathlib import Path
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Any
 
 import httpx
+from dotenv import load_dotenv
 from fastapi import Body, FastAPI, HTTPException, Query
 
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+
 from scripts.tools.events_commentary_lookup import events_commentary_lookup
+from scripts.tools.knowledge_lookup import knowledge_for_match, knowledge_search
 from scripts.tools.match_context import build_match_context
 from scripts.tools.match_state import filter_feasible_movers, score_at_minute
 from scripts.tools.market_state_lookup import market_state_lookup
@@ -54,6 +62,7 @@ LOOKBACK_MIN = float(os.environ.get("EDGECAST_LOOKBACK_MIN", "5"))
 TICK_ENABLED = os.environ.get("EDGECAST_TICK_ENABLED", "1") == "1"
 TOP_MOVERS = int(os.environ.get("EDGECAST_TOP_MOVERS", "5"))
 CONTEXT_RECENT_MIN = float(os.environ.get("EDGECAST_CONTEXT_RECENT_MIN", "15"))
+KNOWLEDGE_IN_PAYLOAD = int(os.environ.get("EDGECAST_KNOWLEDGE_IN_PAYLOAD", "3"))
 CHAT_HISTORY_MAX = int(os.environ.get("EDGECAST_CHAT_HISTORY", "20"))
 CHAT_IN_TICK_MAX = int(os.environ.get("EDGECAST_CHAT_IN_TICK", "6"))
 
@@ -171,6 +180,8 @@ def build_tick_payload(now: datetime, lookback_min: float | None = None) -> dict
         if e.get("id"):
             _seen_event_ids.add(e["id"])
 
+    knowledge_context = knowledge_for_match(MATCH_ID, limit=KNOWLEDGE_IN_PAYLOAD)
+
     return {
         "mode": "tick",
         "session_id": SESSION_ID,
@@ -179,6 +190,7 @@ def build_tick_payload(now: datetime, lookback_min: float | None = None) -> dict
         "match_minute": round(now_minute, 2),
         "match_score": match_score,
         "match_context": match_context,
+        "knowledge_context": knowledge_context,
         "since_minute": round(since_minute, 2),
         "lookback_min": round(lookback, 2),
         "new_key_events": window_events,
@@ -193,6 +205,8 @@ def build_tick_payload(now: datetime, lookback_min: float | None = None) -> dict
             "(not a raw price ticker). Connect pitch read → markets at Xc → "
             "why it is interesting. match_context holds the full match story "
             "up to now (goals, cards, subs, highlight commentary). "
+            "knowledge_context holds preloaded historical player/team/matchup "
+            "notes — use GET /knowledge/search for deeper lookups. "
             "chat_history holds recent trader questions — factor them in if "
             "relevant. Use match_score to ignore dead markets. Otherwise "
             "return empty string. Dedup against previously_seen_key_event_ids "
@@ -211,6 +225,11 @@ def build_chat_payload(question: str, minute: float | None = None) -> dict[str, 
     match_context = build_match_context(MATCH_ID, now_minute, recent_minutes=CONTEXT_RECENT_MIN)
     ec = events_commentary_lookup(MATCH_ID, since_minute, now_minute, "both")
     movers = compute_top_movers(now_minute, lookback, TOP_MOVERS)
+    knowledge_context = knowledge_for_match(
+        MATCH_ID,
+        extra_query=question,
+        limit=KNOWLEDGE_IN_PAYLOAD,
+    )
 
     return {
         "mode": "chat",
@@ -220,6 +239,7 @@ def build_chat_payload(question: str, minute: float | None = None) -> dict[str, 
         "match_minute": round(now_minute, 2),
         "match_score": match_score,
         "match_context": match_context,
+        "knowledge_context": knowledge_context,
         "question": question,
         "since_minute": round(since_minute, 2),
         "lookback_min": round(lookback, 2),
@@ -230,15 +250,73 @@ def build_chat_payload(question: str, minute: float | None = None) -> dict[str, 
         "chat_history": list(_chat_history),
         "hint": (
             f'Trader question: "{question}". Answer in 3–5 sentences using '
-            "match_context, match_score, chat_history, and cent prices. "
-            "Reference prior chat turns when the question is follow-up. "
-            "Use tools for deeper windows if needed. Do not suggest orders."
+            "match_context, knowledge_context, match_score, chat_history, and "
+            "cent prices. Reference prior chat turns when the question is "
+            "follow-up. Use GET /knowledge/search for player/team history or "
+            "prior matchups; use other tools for live windows. Do not suggest orders."
         ),
     }
 
 
+@lru_cache(maxsize=1)
+def _load_agent_instructions() -> str:
+    """Read agent instructions from test.pipe (same source as smoke script)."""
+    pipe_path = Path(__file__).resolve().parents[1] / "test.pipe"
+    raw = pipe_path.read_text(encoding="utf-8")
+    cleaned = re.sub(r",(\s*[\]}])", r"\1", raw)
+    pipe = json.loads(cleaned)
+    for agent_id in ("agent_rocketride_1", "agent_deepagent_1"):
+        agent = next((c for c in pipe["components"] if c["id"] == agent_id), None)
+        if not agent:
+            continue
+        cfg = agent.get("config", {})
+        instructions = cfg.get("instructions") or cfg.get("default", {}).get("instructions") or []
+        if instructions:
+            return "\n\n".join(instructions)
+    return ""
+
+
+async def _call_gmi_direct(payload: dict[str, Any]) -> str:
+    """Fallback when RocketRide webhook is offline."""
+    api_key = os.environ.get("GMI_API_KEY") or os.environ.get("ROCKETRIDE_GMI_API_KEY")
+    if not api_key:
+        log.warning("GMI fallback skipped — no API key")
+        return ""
+    instructions = _load_agent_instructions()
+    if not instructions:
+        log.warning("GMI fallback skipped — no agent instructions in test.pipe")
+        return ""
+    model = os.environ.get("GMI_MODEL", "google/gemini-3.5-flash")
+    body = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": instructions},
+            {"role": "user", "content": json.dumps(payload, indent=2)},
+        ],
+        "temperature": 0.2,
+        "max_tokens": 400 if payload.get("mode") == "tick" else 2000,
+    }
+    async with httpx.AsyncClient(timeout=45) as gmi:
+        r = await gmi.post(
+            "https://api.gmi-serving.com/v1/chat/completions",
+            json=body,
+            headers={"Authorization": f"Bearer {api_key}"},
+        )
+    if r.status_code >= 300:
+        log.warning("GMI fallback HTTP %s: %s", r.status_code, r.text[:200])
+        return ""
+    try:
+        return (r.json()["choices"][0]["message"]["content"] or "").strip()
+    except (KeyError, IndexError, json.JSONDecodeError):
+        return ""
+
+
 async def _post_webhook(payload: dict[str, Any], client: httpx.AsyncClient) -> str:
-    r = await client.post(WEBHOOK_URL, json=payload)
+    try:
+        r = await client.post(WEBHOOK_URL, json=payload)
+    except httpx.RequestError as e:
+        log.warning("webhook request failed: %s", e)
+        return ""
     log.info("webhook %s %s", r.status_code, r.text[:120] if r.text else "")
     if r.status_code >= 300 or not r.text:
         return ""
@@ -246,6 +324,14 @@ async def _post_webhook(payload: dict[str, Any], client: httpx.AsyncClient) -> s
         return _extract_broadcast(r.json())
     except (json.JSONDecodeError, ValueError):
         return r.text.strip()
+
+
+async def _resolve_agent_answer(payload: dict[str, Any], client: httpx.AsyncClient) -> str:
+    answer = await _post_webhook(payload, client)
+    if answer:
+        return answer
+    log.info("RocketRide unavailable — using direct GMI fallback")
+    return await _call_gmi_direct(payload)
 
 
 async def _fire_tick(client: httpx.AsyncClient) -> None:
@@ -258,7 +344,7 @@ async def _fire_tick(client: httpx.AsyncClient) -> None:
         len(payload["new_key_events"]),
         len(payload["new_commentary"]),
     )
-    r = await _post_webhook(payload, client)
+    r = await _resolve_agent_answer(payload, client)
     if r:
         broadcast_text = r
         top = payload["polymarket_top_movers"]
@@ -278,10 +364,8 @@ async def tick_loop() -> None:
             try:
                 bucket = game_tick_bucket(current_match_minute())
                 if bucket > _last_tick_bucket:
-                    await _fire_tick(client)
                     _last_tick_bucket = bucket
-            except httpx.RequestError as e:
-                log.warning("tick post failed (will retry): %s", e)
+                    await _fire_tick(client)
             except Exception as e:
                 log.exception("tick build/post crashed: %s", e)
             await asyncio.sleep(TICK_POLL_SECONDS)
@@ -347,6 +431,25 @@ def market_window(
     return market_state_lookup(MATCH_ID, market_id, start_min, end_min, agg)  # type: ignore[arg-type]
 
 
+@app.get("/knowledge/search")
+def knowledge_search_endpoint(
+    q: str = Query(""),
+    entity: str | None = Query(None),
+    chunk_type: str | None = Query(None, alias="type"),
+    match_id: str | None = Query(None),
+    limit: int = Query(3, ge=1, le=10),
+) -> dict[str, Any]:
+    """Keyword search over historical KB chunks (players, teams, matchups)."""
+    parsed_type = chunk_type if chunk_type in ("player", "team", "matchup", "commentary") else None
+    return knowledge_search(
+        q,
+        match_id=match_id or MATCH_ID,
+        entity=entity,
+        chunk_type=parsed_type,  # type: ignore[arg-type]
+        limit=limit,
+    )
+
+
 @app.get("/events_window")
 def events_window(
     start_min: float = Query(...),
@@ -378,7 +481,7 @@ def replay_seek(minute: float = Query(...)) -> dict[str, Any]:
     if minute <= 0:
         _reset_memory()
     else:
-        _last_tick_bucket = game_tick_bucket(minute)
+        _last_tick_bucket = game_tick_bucket(minute) - 1
     return {"now_minute": minute, "mode": "fixed"}
 
 
@@ -418,10 +521,10 @@ async def agent_chat(body: dict[str, Any] = Body(...)) -> dict[str, Any]:
     question_minute = payload["match_minute"]
 
     async with httpx.AsyncClient(timeout=45) as client:
-        answer = await _post_webhook(payload, client)
+        answer = await _resolve_agent_answer(payload, client)
 
     if not answer:
-        raise HTTPException(502, "RocketRide webhook returned no answer")
+        raise HTTPException(502, "Agent returned no answer (RocketRide + GMI fallback both failed)")
 
     _chat_history.append({
         "role": "user",
@@ -436,7 +539,7 @@ async def agent_chat(body: dict[str, Any] = Body(...)) -> dict[str, Any]:
 
     return {
         "answer": answer,
-        "modelUsed": "gemini-3.5-flash (via RocketRide)",
+        "modelUsed": "gemini-3.5-flash (RocketRide or GMI direct)",
         "chat_turns": len(_chat_history),
     }
 

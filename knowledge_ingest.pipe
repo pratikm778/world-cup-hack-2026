@@ -1,0 +1,101 @@
+{
+  "components": [
+    {
+      "id": "webhook_ingest_1",
+      "provider": "webhook",
+      "name": "Upload Knowledge Files",
+      "config": {
+        "hideForm": true,
+        "mode": "Source",
+        "parameters": {},
+        "type": "webhook",
+        "name": "Upload Knowledge Files"
+      },
+      "ui": {
+        "position": { "x": 20, "y": 200 },
+        "nodeType": "default",
+        "formDataValid": true
+      }
+    },
+    {
+      "id": "parse_ingest_1",
+      "provider": "parse",
+      "name": "Parse TXT",
+      "config": {
+        "name": "Parse TXT"
+      },
+      "input": [{ "lane": "tags", "from": "webhook_ingest_1" }],
+      "ui": {
+        "position": { "x": 240, "y": 200 },
+        "nodeType": "default",
+        "formDataValid": true
+      }
+    },
+    {
+      "id": "preprocessor_langchain_1",
+      "provider": "preprocessor_langchain",
+      "name": "Chunk Documents",
+      "config": {
+        "profile": "recursive",
+        "recursive": {
+          "splitter": "RecursiveCharacterTextSplitter",
+          "separators": "'\\n\\n', '\\n', ' ', ''",
+          "mode": "strlen",
+          "strlen": 600
+        },
+        "parameters": {},
+        "name": "Chunk Documents"
+      },
+      "input": [{ "lane": "text", "from": "parse_ingest_1" }],
+      "ui": {
+        "position": { "x": 460, "y": 200 },
+        "nodeType": "default",
+        "formDataValid": true
+      }
+    },
+    {
+      "id": "embedding_ingest_1",
+      "provider": "embedding_transformer",
+      "name": "Embed Chunks",
+      "config": {
+        "profile": "miniLM",
+        "parameters": {},
+        "name": "Embed Chunks"
+      },
+      "input": [{ "lane": "documents", "from": "preprocessor_langchain_1" }],
+      "ui": {
+        "position": { "x": 680, "y": 200 },
+        "nodeType": "default",
+        "formDataValid": true
+      }
+    },
+    {
+      "id": "chroma_ingest_1",
+      "provider": "chroma",
+      "name": "Chroma Store",
+      "config": {
+        "profile": "local",
+        "local": {
+          "host": "${ROCKETRIDE_CHROMA_HOST}",
+          "port": 8330,
+          "collection": "${ROCKETRIDE_CHROMA_COLLECTION}"
+        },
+        "parameters": {},
+        "name": "Chroma Store"
+      },
+      "input": [{ "lane": "documents", "from": "embedding_ingest_1" }],
+      "ui": {
+        "position": { "x": 900, "y": 200 },
+        "nodeType": "default",
+        "formDataValid": true
+      }
+    }
+  ],
+  "project_id": "a3f8c2d1-9e4b-4a7f-b6c0-1d2e3f4a5b6c",
+  "source": "webhook_ingest_1",
+  "isLocked": false,
+  "snapToGrid": true,
+  "snapGridSize": [10, 10],
+  "version": 1,
+  "docRevision": 1
+}

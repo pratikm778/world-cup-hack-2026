@@ -1,0 +1,7 @@
+# id: man-city-home-form-2026
+# type: team
+# entity: Manchester City FC
+# tags: manchester-city, home, possession, pressing
+# match_id: ars-man-2026-04-19
+
+Manchester City entered this April fixture second in the table, unbeaten at the Etihad in 2026 (W7 D1). Guardiola's side averaged 64% possession at home and conceded just 0.6 xG per game in that span. Their typical game state vs top-six opponents: aggressive rest-press in the first 20 minutes, then control through Rodri/Nico González pivot rotations. City have won 4 of the last 5 league meetings with Arsenal at home; the outlier was a 0-0 in January 2024 when Arsenal sat in a compact 4-4-2 low block. Corner count tends to favour City heavily at home (avg 7.2 vs Arsenal's 3.1 in this fixture historically).

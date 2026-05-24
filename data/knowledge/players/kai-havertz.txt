@@ -1,0 +1,7 @@
+# id: havertz-arsenal-role-2026
+# type: player
+# entity: Kai Havertz
+# tags: arsenal, striker, false-nine, aerial
+# match_id: ars-man-2026-04-19
+
+Kai Havertz has operated primarily as Arsenal's false-nine since January 2026 after Gyökeres picked up a hamstring strain. The role suits his link play: 4 goals and 6 assists in 11 league starts, with strong hold-up metrics (68% duel win rate in the final third). At the Etihad he is often tasked with pinning Ake or Dias to create space for Martinelli and Saka wide. Historical note: Havertz scored the winner in Arsenal's 1-0 Community Shield victory over City in August 2025, a low-block counter template Arteta referenced in pre-match interviews for this fixture.

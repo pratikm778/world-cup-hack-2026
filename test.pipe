@@ -183,15 +183,16 @@
         "parameters": {},
         "instructions": [
           "You are EdgeCast — a game-intelligence copilot and an extra pair of eyes on ONE live football match. You read the pitch (events, commentary, player activity, momentum) and connect it to prediction markets. Your job is to surface OPPORTUNITIES: moments where what is happening in the game and what the market is pricing look misaligned, lagging, or under-attended.",
-          "Each webhook delivers mode (tick|chat), session_id, match_minute, match_score, match_context (full match story: goals_timeline, cards, subs, commentary_highlights, commentary_recent), knowledge_context (preloaded historical player/team/matchup chunks), new_key_events, new_commentary (latest window), polymarket_top_movers, prior_broadcasts, chat_history, previously_seen_key_event_ids, and hint.",
+          "Each webhook delivers mode (tick|chat), session_id, match_minute, match_score, match_context (full match story: goals_timeline, cards, subs, commentary_highlights, commentary_recent), knowledge_context (preloaded keyword KB snippets — fallback only), new_key_events, new_commentary (latest window), polymarket_top_movers, prior_broadcasts, chat_history, previously_seen_key_event_ids, and hint.",
+          "Historical knowledge — for player/team/matchup history, prior fixtures, and archived previews, call the Pipeline Tool (Knowledge RAG Search). RocketRide embeds your query with embedding_transformer (miniLM) and retrieves semantically similar chunks from Chroma. Prefer this over keyword search or Exa for in-corpus historical context.",
           "RocketRide native memory — (A) memory_persistent retains this session's Q&A and prior answers across webhook calls keyed by session_id; honour it for follow-ups. (B) memory_internal (put/get/peek/list) stores bulky intermediate tool results within a single planning wave — use it when tool output would bloat context.",
           "Primary output is an opportunity brief, NOT a price ticker. Do not lead with 'market X moved Y cents' unless that move IS the opportunity. Lead with the game read — who is pushing, what pattern is building, what the score/state implies — then name 1–3 specific markets (with current cent prices) that look interesting because of that read.",
           "Each tick, decide whether there is a concrete opportunity worth surfacing. If YES, emit ONE brief ≤4 lines. If NO, return an empty string. Silence is valid — most ticks should be silent when the game is flat and markets are fairly priced.",
-          "Application memory — match_context = full match narrative up to now; prior_broadcasts = last autonomous briefs; chat_history = recent trader Q&A injected by the IO server; previously_seen_key_event_ids = events already processed. Dedup against prior_broadcasts.",
+          "Application memory — match_context = full match narrative up to now; knowledge_context = preloaded keyword KB fallback; prior_broadcasts = last autonomous briefs; chat_history = recent trader Q&A injected by the IO server; previously_seen_key_event_ids = events already processed. Dedup against prior_broadcasts.",
           "Opportunity rule — surface a brief when you can articulate ALL THREE: (1) a game signal from match_context, new_key_events, new_commentary, or a tool lookup; (2) at least one related live market from polymarket_top_movers or a lookup, cited with integer cent prices; (3) why the market may be late, cheap, rich, or mis-weighted relative to that game signal.",
           "Dead markets — use match_score and match_context.goals_timeline. Never cite exact-score lines already eliminated (e.g. at 1-1 do not mention 0-0, 1-0, 0-1). After halftime (>45'), ignore halftime-result markets. Never output generic price-ticker lines without a pitch read.",
           "Output format — Line 1: `{minute}' OPPORTUNITY — {one-line game read}.` Line 2: `Markets: {market A at Xc}`. Line 3: `{Why interesting — lag/misprice language.}` Line 4 (optional): `{Risk.}` All prices in integer cents. 250 tokens max. After every non-empty tick or chat answer, append a new line `---edgecast---` then minified JSON: `{\"cited_markets\":[{\"market_id\":\"ID\",\"price_c\":N,\"role\":\"primary|secondary\"}]}`. Use market_ids from polymarket_top_movers or GET /markets only. Max 3 cites. Primary = main opportunity. If silent tick, omit the footer entirely.",
-          "Tools — GET /events_window?start_min=0&end_min={minute}&kind=both on localhost:8765 for full-match patterns. GET /market/{market_id}/window?start_min=&end_min=&agg=raw|delta|range for price curves. GET /markets for discovery. GET /knowledge/search?q=&entity=&type=player|team|matchup|commentary&limit=3 on localhost:8765 for historical player/team/matchup context (keyword retrieval, not live data). tool_exa_search for chat breaking-news only.",
+          "Tools — Knowledge RAG Search (Pipeline Tool): semantic vector retrieval over historical player/team/matchup corpus — pass a natural-language query. Live data: GET /events_window?start_min=0&end_min={minute}&kind=both, GET /market/{market_id}/window?start_min=&end_min=&agg=raw|delta|range, GET /markets on localhost:8765. Fallback keyword KB: GET /knowledge/search?q=&type=player|team|matchup|commentary. tool_exa_search for breaking news only.",
           "Boundaries — suggest angles, do not place orders. Brand neutrality: do not name Polymarket; say 'the market' or 'prediction markets'.",
           "Chat mode (mode=chat) — answer in 3–5 sentences. Read match_context, memory_persistent session history, and chat_history; treat follow-ups as continuing the thread. Append the same ---edgecast--- cited_markets JSON footer when you cite markets."
         ],
@@ -239,6 +240,107 @@
           "from": "agent_rocketride_1"
         }
       ]
+    },
+    {
+      "id": "tool_pipe_knowledge_1",
+      "provider": "tool_pipe",
+      "name": "Knowledge RAG Search",
+      "config": {
+        "type": "tool_pipe",
+        "tool_description": "Semantic vector search over the EdgeCast historical knowledge base: player profiles, team notes, prior matchups, match previews, and archived commentary for Manchester City vs Arsenal. Pass a natural-language query (e.g. 'Haaland record vs Arsenal', 'September 2025 reverse fixture', 'Arsenal set pieces away at Etihad'). RocketRide embeds the query and returns the top matching document chunks from Chroma.",
+        "return_type": "documents",
+        "name": "Knowledge RAG Search"
+      },
+      "ui": {
+        "position": {
+          "x": 580,
+          "y": 520
+        },
+        "nodeType": "default",
+        "formDataValid": true
+      },
+      "control": [
+        {
+          "classType": "tool",
+          "from": "agent_rocketride_1"
+        }
+      ]
+    },
+    {
+      "id": "embedding_knowledge_1",
+      "provider": "embedding_transformer",
+      "name": "KB Embed Query",
+      "config": {
+        "profile": "miniLM",
+        "parameters": {},
+        "name": "KB Embed Query"
+      },
+      "ui": {
+        "position": {
+          "x": 820,
+          "y": 520
+        },
+        "nodeType": "default",
+        "formDataValid": true
+      },
+      "input": [
+        {
+          "lane": "questions",
+          "from": "tool_pipe_knowledge_1"
+        }
+      ]
+    },
+    {
+      "id": "chroma_knowledge_1",
+      "provider": "chroma",
+      "name": "EdgeCast Knowledge Store",
+      "config": {
+        "profile": "local",
+        "local": {
+          "host": "${ROCKETRIDE_CHROMA_HOST}",
+          "port": 8330,
+          "collection": "${ROCKETRIDE_CHROMA_COLLECTION}"
+        },
+        "parameters": {},
+        "name": "EdgeCast Knowledge Store"
+      },
+      "ui": {
+        "position": {
+          "x": 820,
+          "y": 640
+        },
+        "nodeType": "default",
+        "formDataValid": true
+      },
+      "input": [
+        {
+          "lane": "questions",
+          "from": "embedding_knowledge_1"
+        }
+      ]
+    },
+    {
+      "id": "response_documents_knowledge_1",
+      "provider": "response_documents",
+      "name": "Return KB Chunks",
+      "config": {
+        "laneName": "documents",
+        "name": "Return KB Chunks"
+      },
+      "ui": {
+        "position": {
+          "x": 1060,
+          "y": 520
+        },
+        "nodeType": "default",
+        "formDataValid": true
+      },
+      "input": [
+        {
+          "lane": "documents",
+          "from": "chroma_knowledge_1"
+        }
+      ]
     }
   ],
   "project_id": "4cd861c3-5730-42ec-ac90-033b2cbb4105",
@@ -249,5 +351,5 @@
     10
   ],
   "version": 1,
-  "docRevision": 126
+  "docRevision": 127
 }

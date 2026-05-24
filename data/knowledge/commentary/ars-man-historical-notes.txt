@@ -1,0 +1,15 @@
+# id: ars-man-historical-commentary
+# type: commentary
+# entity: Manchester City FC vs Arsenal FC
+# tags: historical, commentary, h2h, narrative
+# match_id: ars-man-2026-04-19
+
+Historical commentary archive — Man City vs Arsenal (selected notes):
+
+Jan 2024, Etihad 0-0: "Arsenal's most mature away performance of the Arteta era — Raya made one save, Gabriel cleared three set-piece headers. Markets overpriced City dominance; final-third entries were 18-4 City but xG only 0.7-0.3."
+
+Apr 2023, Etihad 4-1 Arsenal: "Haaland hat-trick; Arsenal's high line collapsed after 30'. Lesson Arteta cited repeatedly: at the Etihad you cannot press man-for-man for 90 minutes."
+
+Community Shield Aug 2025: "Havertz 86' winner. Template for low-block + transition. Haaland isolated, 2 touches in box."
+
+Analyst consensus entering April 2026: "This fixture rarely stays 0-0 — last six league meetings averaged 3.2 goals. First goal timing historically swings BTTS markets hard; 4 of last 5 saw both teams score."

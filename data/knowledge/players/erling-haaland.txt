@@ -1,0 +1,7 @@
+# id: haaland-form-april-2026
+# type: player
+# entity: Erling Haaland
+# tags: manchester-city, striker, goals, form
+# match_id: ars-man-2026-04-19
+
+Erling Haaland entered April 2026 with 28 Premier League goals, three behind the single-season record pace he set in 2022-23. In City's last five home league matches he scored in four, including a brace against Liverpool on 5 April. Against Arsenal specifically, Haaland has 8 goals in 9 appearances since joining City — his favourite opponent by conversion rate. Arteta's high line at the Etihad has historically been punished: Haaland's average xG per 90 in this fixture is 0.92, well above his season average of 0.71. Set-piece threat is also elevated; three of his last four goals vs Arsenal came from corners or second balls in the box.

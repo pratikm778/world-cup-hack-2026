@@ -1,0 +1,7 @@
+# id: ars-man-reverse-fixture-sep-2025
+# type: matchup
+# entity: Arsenal FC vs Manchester City FC
+# tags: arsenal, manchester-city, reverse-fixture, emirates
+# match_id: ars-man-2026-04-19
+
+Reverse fixture — Emirates Stadium, 21 September 2025: Manchester City 1-2 Arsenal. Havertz opened on 34' from a Martinelli cross; Haaland equalised on 58' from a De Bruyne through-ball. Winner: Saka 78', cutting inside on his left after a Zubimendi recovery in midfield. Key tactical note from that day: Arsenal's mid-block held City to 0.9 xG despite 58% possession for the hosts. Cherki came on at 65' and changed City's shape but could not break through. Post-match commentary highlighted Arsenal's rest-defence — only 2 transition chances conceded — as the template Arteta would reuse at the Etihad.

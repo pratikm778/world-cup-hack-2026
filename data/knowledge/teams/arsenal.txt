@@ -1,0 +1,7 @@
+# id: arsenal-away-big-six-2026
+# type: team
+# entity: Arsenal FC
+# tags: arsenal, away, pressing, set-pieces
+# match_id: ars-man-2026-04-19
+
+Arsenal sat top of the table on goal difference heading into the Etihad clash, with the league's best defensive record (22 conceded in 33 games). Away against top-six sides in 2025-26 they were W3 D2 L1 — competitive but not dominant. Arteta's away plan vs possession teams: 4-3-3 with Saka inverted, coordinated mid-block triggers at City's first touch in the half-spaces, and heavy emphasis on set-piece routines (Gabriel and Saliba combined for 11 set-piece xG contributions). The Gunners had scored first in 3 of their last 4 visits to Manchester (all competitions), often via early transitions before City settled into rhythm.
