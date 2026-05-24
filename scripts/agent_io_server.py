@@ -43,6 +43,7 @@ log = logging.getLogger("edgecast")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 MATCH_ID = os.environ.get("EDGECAST_MATCH_ID", "ars-man-2026-04-19")
+SESSION_ID = os.environ.get("EDGECAST_SESSION_ID", f"edgecast-{MATCH_ID}")
 TICK_GAME_MINUTES = float(os.environ.get("EDGECAST_TICK_GAME_MINUTES", "5"))
 TICK_POLL_SECONDS = float(os.environ.get("EDGECAST_TICK_POLL_SECONDS", "1"))
 WEBHOOK_URL = os.environ.get(
@@ -172,6 +173,7 @@ def build_tick_payload(now: datetime, lookback_min: float | None = None) -> dict
 
     return {
         "mode": "tick",
+        "session_id": SESSION_ID,
         "match_id": MATCH_ID,
         "tick_ts": now.isoformat(),
         "match_minute": round(now_minute, 2),
@@ -212,6 +214,7 @@ def build_chat_payload(question: str, minute: float | None = None) -> dict[str, 
 
     return {
         "mode": "chat",
+        "session_id": SESSION_ID,
         "match_id": MATCH_ID,
         "tick_ts": now.isoformat(),
         "match_minute": round(now_minute, 2),
@@ -320,6 +323,7 @@ def health() -> dict[str, Any]:
         mode = "wall_clock"
     return {
         "ok": True,
+        "session_id": SESSION_ID,
         "match_id": MATCH_ID,
         "now_minute": round(current_match_minute(), 2),
         "mode": mode,

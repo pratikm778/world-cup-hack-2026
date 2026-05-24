@@ -6,9 +6,14 @@ export function loadAgentInstructions(repoRoot: string): string {
     const raw = fs.readFileSync(path.join(repoRoot, "test.pipe"), "utf8");
     const cleaned = raw.replace(/,(\s*[\]}])/g, "$1");
     const pipe = JSON.parse(cleaned);
-    const agent = pipe.components.find((c: any) => c.id === "agent_deepagent_1");
-    const instructions: string[] = agent?.config?.default?.instructions || [];
-    return instructions.join("\n\n");
+    for (const agentId of ["agent_rocketride_1", "agent_deepagent_1"]) {
+      const agent = pipe.components.find((c: any) => c.id === agentId);
+      if (!agent) continue;
+      const instructions: string[] =
+        agent.config?.instructions || agent.config?.default?.instructions || [];
+      if (instructions.length) return instructions.join("\n\n");
+    }
+    return "";
   } catch {
     return (
       "You are EdgeCast — game-intelligence copilot. Surface ONE OPPORTUNITY when game " +

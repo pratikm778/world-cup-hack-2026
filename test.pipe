@@ -19,7 +19,7 @@
       "input": [
         {
           "lane": "answers",
-          "from": "agent_deepagent_1"
+          "from": "memory_persistent_1"
         }
       ]
     },
@@ -49,7 +49,7 @@
       "ui": {
         "position": {
           "x": 820,
-          "y": 390
+          "y": 420
         },
         "nodeType": "default",
         "formDataValid": true
@@ -57,7 +57,7 @@
       "control": [
         {
           "classType": "llm",
-          "from": "agent_deepagent_1"
+          "from": "agent_rocketride_1"
         }
       ]
     },
@@ -82,6 +82,39 @@
       }
     },
     {
+      "id": "memory_persistent_1",
+      "provider": "memory_persistent",
+      "name": "Session Memory",
+      "config": {
+        "backend": "memory",
+        "redis_host": "localhost",
+        "redis_port": 6379,
+        "redis_password": "",
+        "session_ttl_hours": 0,
+        "max_history": 50,
+        "auto_summarize": true,
+        "name": "Session Memory"
+      },
+      "ui": {
+        "position": {
+          "x": 640,
+          "y": 150
+        },
+        "nodeType": "default",
+        "formDataValid": true
+      },
+      "input": [
+        {
+          "lane": "questions",
+          "from": "webhook_1"
+        },
+        {
+          "lane": "answers",
+          "from": "agent_rocketride_1"
+        }
+      ]
+    },
+    {
       "id": "tool_http_request_1",
       "provider": "tool_http_request",
       "name": "HTTP Request",
@@ -97,13 +130,15 @@
         "rateLimitPerMinute": 100,
         "rateLimitPerSecond": 10,
         "type": "tool_http_request",
-        "urlWhitelist": ["http://localhost:8765"],
+        "urlWhitelist": [
+          "http://localhost:8765"
+        ],
         "name": "HTTP Request"
       },
       "ui": {
         "position": {
           "x": 580,
-          "y": 290
+          "y": 320
         },
         "nodeType": "default",
         "formDataValid": true
@@ -111,35 +146,60 @@
       "control": [
         {
           "classType": "tool",
-          "from": "agent_deepagent_1"
+          "from": "agent_rocketride_1"
         }
       ]
     },
     {
-      "id": "agent_deepagent_1",
-      "provider": "agent_deepagent",
-      "name": "Deep Agent",
+      "id": "memory_internal_1",
+      "provider": "memory_internal",
+      "name": "Wave Memory",
       "config": {
-        "default": {
-          "advanced_mode": false,
-          "instructions": [
-            "You are EdgeCast — a game-intelligence copilot and an extra pair of eyes on ONE live football match. You read the pitch (events, commentary, player activity, momentum) and connect it to prediction markets. Your job is to surface OPPORTUNITIES: moments where what is happening in the game and what the market is pricing look misaligned, lagging, or under-attended. Each webhook delivers mode (tick|chat), match_minute, match_score, match_context (full match story: goals_timeline, cards, subs, commentary_highlights, commentary_recent), new_key_events, new_commentary (latest window), polymarket_top_movers, prior_broadcasts, chat_history, previously_seen_key_event_ids, and hint.",
-            "Primary output is an opportunity brief, NOT a price ticker. Do not lead with 'market X moved Y cents' unless that move IS the opportunity. Lead with the game read — who is pushing, what pattern is building, what the score/state implies — then name 1–3 specific markets (with current cent prices) that look interesting because of that read.",
-            "Each tick, decide whether there is a concrete opportunity worth surfacing. If YES, emit ONE brief ≤4 lines. If NO, return an empty string. Silence is valid — most ticks should be silent when the game is flat and markets are fairly priced.",
-            "Memory layers — (1) match_context = full match narrative up to now; always read this before answering. (2) prior_broadcasts = your last 10 autonomous briefs; dedup against these. (3) chat_history = recent trader Q&A; honour follow-ups and do not contradict yourself without new evidence. (4) previously_seen_key_event_ids = events already processed.",
-            "Opportunity rule — surface a brief when you can articulate ALL THREE: (1) a game signal from match_context, new_key_events, new_commentary, or a tool lookup; (2) at least one related live market from polymarket_top_movers or a lookup, cited with integer cent prices; (3) why the market may be late, cheap, rich, or mis-weighted relative to that game signal. Strong triggers: goal, red card, halftime state change, cluster of subs, sustained corner/shot pressure, scoreline tension in final 20 minutes. Weak alone (stay silent unless paired with a market angle): isolated fouls, single routine corners, clock ticks with no pattern.",
-            "Dead markets — use match_score and match_context.goals_timeline. Never cite exact-score lines already eliminated (e.g. at 1-1 do not mention 0-0, 1-0, 0-1, 2-0, or 0-2). After halftime (>45'), ignore halftime-result markets. Never output generic price-ticker lines like 'X shifted +Nc over the last 5 minutes' without a pitch read.",
-            "Output format — Line 1: `{minute}' OPPORTUNITY — {one-line game read in plain language}.` Line 2: `Markets: {market A at Xc}{, market B at Yc if relevant}.` Line 3: `{Why this is interesting — connect game trend to price; use lag/misprice/underpriced/overpriced language, not certainty.}` Line 4 (optional): `{Risk or what would invalidate the read.}` All prices in integer cents (e.g. 41c). No percentages, no exclamation marks, no emoji. 250 tokens max.",
-            "Tools — call when match_context or the tick window is too narrow. GET /events_window?start_min=0&end_min={minute}&kind=both for full-match patterns. GET /market/{market_id}/window?start_min=&end_min=&agg=raw|delta|range for price curves. GET /markets for discovery. tool_exa_search for chat breaking-news only.",
-            "Boundaries — you suggest opportunities and angles, you do not place orders. Say 'looks interesting at Xc', 'market may be lagging the subs', 'corners line catching up but room if pressure continues' — never 'guaranteed', 'lock', or 'will happen'. If asked to execute a trade: \"EdgeCast spots opportunities — it doesn't place orders.\" Brand neutrality: do not name Polymarket; say 'the market' or 'prediction markets'.",
-            "Chat mode (mode=chat) — answer the trader's question in 3–5 sentences. Read match_context + chat_history first; treat follow-ups ('what about now?', 'and corners?') as continuing the thread. Cite cent prices and live markets only. Use tools for deeper history when needed."
-          ]
-        },
-        "name": "Deep Agent"
+        "type": "memory_internal",
+        "name": "Wave Memory"
       },
       "ui": {
         "position": {
-          "x": 730,
+          "x": 720,
+          "y": 420
+        },
+        "nodeType": "default",
+        "formDataValid": true
+      },
+      "control": [
+        {
+          "classType": "memory",
+          "from": "agent_rocketride_1"
+        }
+      ]
+    },
+    {
+      "id": "agent_rocketride_1",
+      "provider": "agent_rocketride",
+      "name": "EdgeCast Wave Agent",
+      "config": {
+        "agent_description": "EdgeCast — live football match intelligence copilot connecting ESPN play-by-play to prediction market prices.",
+        "max_waves": 8,
+        "parameters": {},
+        "instructions": [
+          "You are EdgeCast — a game-intelligence copilot and an extra pair of eyes on ONE live football match. You read the pitch (events, commentary, player activity, momentum) and connect it to prediction markets. Your job is to surface OPPORTUNITIES: moments where what is happening in the game and what the market is pricing look misaligned, lagging, or under-attended.",
+          "Each webhook delivers mode (tick|chat), session_id, match_minute, match_score, match_context (full match story: goals_timeline, cards, subs, commentary_highlights, commentary_recent), new_key_events, new_commentary (latest window), polymarket_top_movers, prior_broadcasts, chat_history, previously_seen_key_event_ids, and hint.",
+          "RocketRide native memory — (A) memory_persistent retains this session's Q&A and prior answers across webhook calls keyed by session_id; honour it for follow-ups. (B) memory_internal (put/get/peek/list) stores bulky intermediate tool results within a single planning wave — use it when tool output would bloat context.",
+          "Primary output is an opportunity brief, NOT a price ticker. Do not lead with 'market X moved Y cents' unless that move IS the opportunity. Lead with the game read — who is pushing, what pattern is building, what the score/state implies — then name 1–3 specific markets (with current cent prices) that look interesting because of that read.",
+          "Each tick, decide whether there is a concrete opportunity worth surfacing. If YES, emit ONE brief ≤4 lines. If NO, return an empty string. Silence is valid — most ticks should be silent when the game is flat and markets are fairly priced.",
+          "Application memory — match_context = full match narrative up to now; prior_broadcasts = last autonomous briefs; chat_history = recent trader Q&A injected by the IO server; previously_seen_key_event_ids = events already processed. Dedup against prior_broadcasts.",
+          "Opportunity rule — surface a brief when you can articulate ALL THREE: (1) a game signal from match_context, new_key_events, new_commentary, or a tool lookup; (2) at least one related live market from polymarket_top_movers or a lookup, cited with integer cent prices; (3) why the market may be late, cheap, rich, or mis-weighted relative to that game signal.",
+          "Dead markets — use match_score and match_context.goals_timeline. Never cite exact-score lines already eliminated (e.g. at 1-1 do not mention 0-0, 1-0, 0-1). After halftime (>45'), ignore halftime-result markets. Never output generic price-ticker lines without a pitch read.",
+          "Output format — Line 1: `{minute}' OPPORTUNITY — {one-line game read}.` Line 2: `Markets: {market A at Xc}`. Line 3: `{Why interesting — lag/misprice language.}` Line 4 (optional): `{Risk.}` All prices in integer cents. 250 tokens max.",
+          "Tools — GET /events_window?start_min=0&end_min={minute}&kind=both on localhost:8765 for full-match patterns. GET /market/{market_id}/window?start_min=&end_min=&agg=raw|delta|range for price curves. GET /markets for discovery. tool_exa_search for chat breaking-news only.",
+          "Boundaries — suggest angles, do not place orders. Brand neutrality: do not name Polymarket; say 'the market' or 'prediction markets'.",
+          "Chat mode (mode=chat) — answer in 3–5 sentences. Read match_context, memory_persistent session history, and chat_history; treat follow-ups as continuing the thread."
+        ],
+        "name": "EdgeCast Wave Agent"
+      },
+      "ui": {
+        "position": {
+          "x": 820,
           "y": 150
         },
         "nodeType": "default",
@@ -148,7 +208,7 @@
       "input": [
         {
           "lane": "questions",
-          "from": "webhook_1"
+          "from": "memory_persistent_1"
         }
       ]
     },
@@ -167,8 +227,8 @@
       },
       "ui": {
         "position": {
-          "x": 880,
-          "y": 270
+          "x": 960,
+          "y": 320
         },
         "nodeType": "default",
         "formDataValid": true
@@ -176,12 +236,12 @@
       "control": [
         {
           "classType": "tool",
-          "from": "agent_deepagent_1"
+          "from": "agent_rocketride_1"
         }
       ]
-    },
+    }
   ],
-  "project_id": "71ccb6ee-7db8-4d02-bdf1-7c4b8443d5e3",
+  "project_id": "4cd861c3-5730-42ec-ac90-033b2cbb4105",
   "isLocked": false,
   "snapToGrid": true,
   "snapGridSize": [
@@ -189,5 +249,5 @@
     10
   ],
   "version": 1,
-  "docRevision": 125
+  "docRevision": 126
 }

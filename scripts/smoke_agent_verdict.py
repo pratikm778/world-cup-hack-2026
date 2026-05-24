@@ -36,14 +36,27 @@ def load_env() -> None:
         os.environ.setdefault(k.strip(), v.strip())
 
 
+def load_agent_instructions(pipe: dict) -> list[str]:
+    """Pull instructions from agent_rocketride or legacy agent_deepagent."""
+    for agent_id in ("agent_rocketride_1", "agent_deepagent_1"):
+        agent = next((c for c in pipe["components"] if c["id"] == agent_id), None)
+        if not agent:
+            continue
+        cfg = agent.get("config", {})
+        if cfg.get("instructions"):
+            return cfg["instructions"]
+        if cfg.get("default", {}).get("instructions"):
+            return cfg["default"]["instructions"]
+    return []
+
+
 def load_instructions() -> list[str]:
     """Pull the agent's instructions out of test.pipe (tolerating trailing
     commas in the components array)."""
     raw = (REPO / "test.pipe").read_text()
     cleaned = re.sub(r",(\s*[\]}])", r"\1", raw)
     pipe = json.loads(cleaned)
-    agent = next(c for c in pipe["components"] if c["id"] == "agent_deepagent_1")
-    return agent["config"]["default"]["instructions"]
+    return load_agent_instructions(pipe)
 
 
 def main() -> None:

@@ -312,6 +312,8 @@ async function startServer() {
       .slice(-8);
 
     return {
+      mode: "tick",
+      session_id: process.env.EDGECAST_SESSION_ID || `edgecast-${matchId}`,
       match_id: matchId,
       match_minute: Math.round(nowMinute * 10) / 10,
       match_score,
