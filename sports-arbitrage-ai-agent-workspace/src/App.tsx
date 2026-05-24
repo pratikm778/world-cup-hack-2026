@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
+import { substituteMarketIdsInText } from "../marketLabels";
+import { formatCommentaryClock, formatMatchClock } from "../matchClock";
 import { 
   Sparkles, Play, Pause, RotateCcw, Radio, Settings, 
   Sliders, MessageSquare, Terminal, RefreshCw, 
@@ -38,14 +40,29 @@ export default function App() {
   const [teams, setTeams] = useState<{ home: string; away: string }>({ home: "Manchester City", away: "Arsenal" });
   const [commentary, setCommentary] = useState<any[]>([]);
   const [keyEvents, setKeyEvents] = useState<any[]>([]);
-  const [prices, setPrices] = useState<Record<string, { price: number; delta5m: number; delta2m: number }>>({});
+  const [prices, setPrices] = useState<Record<string, {
+    price: number;
+    delta5m: number;
+    delta2m: number;
+    label?: string;
+    question?: string;
+    type?: string;
+  }>>({});
+  const [marketLabels, setMarketLabels] = useState<Record<string, string>>({});
   const [recentGlows, setRecentGlows] = useState<Record<string, boolean>>({});
-  const [broadcasts, setBroadcasts] = useState<any[]>([]);
+  const [broadcasts, setBroadcasts] = useState<Array<{
+    id: string;
+    minute: number;
+    text: string;
+    urgency?: string;
+  }>>([]);
+  const [viewingBroadcastId, setViewingBroadcastId] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState<string>("");
   const [chatHistory, setChatHistory] = useState<Array<{ sender: "user" | "gemini"; text: string; time: string; model?: string }>>([]);
   const [isChatBusy, setIsChatBusy] = useState<boolean>(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
   const commentaryBottomRef = useRef<HTMLDivElement>(null);
+  const prevCommentaryLenRef = useRef(0);
 
   // Poll state API
   useEffect(() => {
@@ -60,6 +77,9 @@ export default function App() {
           setTeams(data.teams);
           setCommentary(data.commentary || []);
           setKeyEvents(data.last_events || []);
+          if (data.market_labels) {
+            setMarketLabels(data.market_labels);
+          }
           
           if (data.prices) {
             setPrices((prevPrices: any) => {
@@ -112,8 +132,14 @@ export default function App() {
             if (prev.some((b) => b.text === data.text && b.minute === data.minute)) {
               return prev;
             }
-            return [...prev, data];
+            return [...prev, {
+              id: `${data.minute}-${Date.now()}`,
+              minute: data.minute,
+              text: data.text,
+              urgency: data.urgency,
+            }];
           });
+          setViewingBroadcastId(null);
         }
       } catch (err) {
         console.error("SSE parse error:", err);
@@ -128,8 +154,30 @@ export default function App() {
   }, [broadcasts, chatHistory]);
 
   useEffect(() => {
-    commentaryBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [commentary]);
+    if (isPlaying && commentary.length > prevCommentaryLenRef.current) {
+      commentaryBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    prevCommentaryLenRef.current = commentary.length;
+  }, [commentary, isPlaying]);
+
+  const latestBroadcast = broadcasts.length > 0 ? broadcasts[broadcasts.length - 1] : null;
+  const displayedBroadcast = viewingBroadcastId
+    ? broadcasts.find((b) => b.id === viewingBroadcastId) ?? latestBroadcast
+    : latestBroadcast;
+  const isViewingArchive = Boolean(
+    viewingBroadcastId && latestBroadcast && viewingBroadcastId !== latestBroadcast.id,
+  );
+  const timelineBroadcasts = [...broadcasts].reverse();
+
+  const formatMarketText = (text: string) =>
+    substituteMarketIdsInText(text, marketLabels);
+
+  const broadcastCardClass = (urgency?: string) =>
+    urgency === "major"
+      ? "bg-red-500/10 border-red-500/30 text-red-200 shadow-[0_0_15px_rgba(239,68,68,0.15)]"
+      : urgency === "movement"
+        ? "bg-amber-500/10 border-amber-500/20 text-amber-200"
+        : "bg-cyan-500/5 border-cyan-500/10 text-cyan-100";
 
   // Controls
   const handlePlay = async () => {
@@ -154,7 +202,9 @@ export default function App() {
     setIsPlaying(false);
     setCurrentMinute(0);
     setBroadcasts([]);
+    setViewingBroadcastId(null);
     setChatHistory([]);
+    prevCommentaryLenRef.current = 0;
     try {
       await fetch("/api/replay/seek?minute=0", { method: "POST" });
     } catch (err) {
@@ -168,7 +218,7 @@ export default function App() {
 
     const userText = chatInput.trim();
     setChatInput("");
-    setChatHistory((prev) => [...prev, { sender: "user", text: userText, time: `${Math.round(currentMinute)}'` }]);
+    setChatHistory((prev) => [...prev, { sender: "user", text: userText, time: formatMatchClock(currentMinute) }]);
     setIsChatBusy(true);
 
     try {
@@ -189,12 +239,26 @@ export default function App() {
         setChatHistory((prev) => [...prev, {
           sender: "gemini",
           text: data.answer,
-          time: `${Math.round(currentMinute)}'`,
+          time: formatMatchClock(currentMinute),
           model: data.modelUsed
+        }]);
+      } else {
+        const errText = await response.text();
+        setChatHistory((prev) => [...prev, {
+          sender: "gemini",
+          text: `Chat request failed (${response.status}). ${errText.slice(0, 200)}`,
+          time: formatMatchClock(currentMinute),
+          model: "error"
         }]);
       }
     } catch (err) {
       console.error(err);
+      setChatHistory((prev) => [...prev, {
+        sender: "gemini",
+        text: "Chat request failed. Check that the dev server is running on port 3005.",
+        time: formatMatchClock(currentMinute),
+        model: "error"
+      }]);
     } finally {
       setIsChatBusy(false);
     }
@@ -329,7 +393,7 @@ export default function App() {
                     <MessageSquare className="w-4 h-4" />
                     01. Agent Broadcasts & Chat
                   </h3>
-                  <span className="text-[9px] text-gray-500 font-mono">Real-time Gemini Stream</span>
+                  <span className="text-[9px] text-gray-500 font-mono">Agent tick every 5 match-min · latest overwrites live</span>
                 </div>
                 <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/20">
                   <Radio className="w-3 h-3 text-cyan-400 animate-pulse" />
@@ -337,57 +401,122 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Chat Feed Messages */}
-              <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar bg-black/10">
-                {broadcasts.length === 0 && chatHistory.length === 0 && (
-                  <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-500 font-mono italic text-xs">
-                    <Terminal className="w-8 h-8 mb-2 opacity-35 text-slate-400" />
-                    Awaiting prediction market broadcast signals... <br/>
-                    Start the replay clock in the center pane to begin.
+              {/* Live analysis + timeline sidebar */}
+              <div className="flex flex-1 min-h-0 border-b border-white/5">
+                <div className="flex-1 flex flex-col min-w-0 bg-black/10">
+                  <div className="px-5 py-3 border-b border-white/5 bg-black/30 flex items-center justify-between gap-2">
+                    <span className="text-[9px] font-mono uppercase tracking-widest text-cyan-400 font-bold">
+                      {isViewingArchive ? "Archive View" : "Live Analysis"}
+                    </span>
+                    {isViewingArchive && (
+                      <button
+                        type="button"
+                        onClick={() => setViewingBroadcastId(null)}
+                        className="text-[9px] font-mono uppercase tracking-wider text-cyan-300 hover:text-cyan-200 px-2 py-0.5 rounded border border-cyan-500/30 bg-cyan-500/10"
+                      >
+                        Back to live
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
+                    {!displayedBroadcast ? (
+                      <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-500 font-mono italic text-xs">
+                        <Terminal className="w-8 h-8 mb-2 opacity-35 text-slate-400" />
+                        Awaiting agent analysis... <br />
+                        First tick fires at 5&apos; of match time.
+                      </div>
+                    ) : (
+                      <div className={`p-4 rounded-xl border transition-all duration-300 font-mono text-xs ${broadcastCardClass(displayedBroadcast.urgency)} ${!isViewingArchive ? "ring-1 ring-cyan-500/20" : ""}`}>
+                        <div className="flex justify-between items-center text-[9px] uppercase tracking-wider mb-2 text-slate-400">
+                          <span className="font-bold flex items-center gap-1 text-cyan-400">
+                            <Sparkles className="w-3 h-3" />
+                            {isViewingArchive ? "EdgeCast Archive" : "EdgeCast Live"}
+                          </span>
+                          <span>{formatMatchClock(displayedBroadcast.minute)}</span>
+                        </div>
+                        <div className="leading-relaxed font-sans text-sm">
+                          {formatMarketText(displayedBroadcast.text)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <aside className="w-44 shrink-0 border-l border-white/5 bg-black/20 flex flex-col min-h-0">
+                  <div className="px-3 py-3 border-b border-white/5">
+                    <span className="text-[9px] font-mono uppercase tracking-widest text-slate-400 font-bold block">
+                      Timeline
+                    </span>
+                    <span className="text-[8px] font-mono text-slate-600 mt-0.5 block">
+                      {timelineBroadcasts.length} update{timelineBroadcasts.length === 1 ? "" : "s"}
+                    </span>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scrollbar">
+                    {timelineBroadcasts.length === 0 ? (
+                      <div className="text-[9px] font-mono text-slate-600 italic p-2 text-center">
+                        Past ticks appear here
+                      </div>
+                    ) : (
+                      timelineBroadcasts.map((b) => {
+                        const isLive = latestBroadcast?.id === b.id && !isViewingArchive;
+                        const isSelected = viewingBroadcastId === b.id || (!viewingBroadcastId && isLive);
+                        return (
+                          <button
+                            key={b.id}
+                            type="button"
+                            onClick={() => setViewingBroadcastId(b.id === latestBroadcast?.id ? null : b.id)}
+                            className={`w-full text-left p-2 rounded-lg border transition-all ${
+                              isSelected
+                                ? "border-cyan-500/40 bg-cyan-500/10"
+                                : "border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-1 mb-1">
+                              <span className="text-[9px] font-mono font-bold text-amber-400">
+                                {formatMatchClock(b.minute)}
+                              </span>
+                              {isLive && (
+                                <span className="text-[7px] font-mono uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-1 rounded">
+                                  Live
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[9px] text-slate-400 line-clamp-3 font-sans leading-snug">
+                              {formatMarketText(b.text)}
+                            </p>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </aside>
+              </div>
+
+              {/* Chat history */}
+              <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar bg-black/10 min-h-0 max-h-[38%]">
+                {chatHistory.length === 0 && broadcasts.length > 0 && (
+                  <div className="text-[9px] font-mono text-slate-600 italic text-center py-2">
+                    Ask EdgeCast about the live read below
                   </div>
                 )}
 
-                {/* Combined broadcasts and user questions */}
-                {/* Render Broadcast Alerts */}
-                {broadcasts.map((b, idx) => (
-                  <div 
-                    key={`b-${idx}`} 
-                    className={`p-3.5 rounded-xl border transition-all duration-300 font-mono text-xs ${
-                      b.urgency === "major" 
-                        ? "bg-red-500/10 border-red-500/30 text-red-200 shadow-[0_0_15px_rgba(239,68,68,0.15)] animate-pulse"
-                        : b.urgency === "movement"
-                          ? "bg-amber-500/10 border-amber-500/20 text-amber-200"
-                          : "bg-cyan-500/5 border-cyan-500/10 text-cyan-100"
-                    }`}
-                  >
-                    <div className="flex justify-between items-center text-[9px] uppercase tracking-wider mb-1.5 text-slate-400">
-                      <span className="font-bold flex items-center gap-1 text-cyan-400">
-                        <Sparkles className="w-3 h-3" />
-                        EdgeCast Alert
-                      </span>
-                      <span>{b.minute.toFixed(1)}'</span>
-                    </div>
-                    <div className="leading-relaxed font-sans">{b.text}</div>
-                  </div>
-                ))}
-
-                {/* Render User Chat History */}
                 {chatHistory.map((ch, idx) => (
-                  <div 
-                    key={`c-${idx}`} 
+                  <div
+                    key={`c-${idx}`}
                     className={`flex flex-col space-y-1 ${ch.sender === "user" ? "items-end" : "items-start"}`}
                   >
                     <div className="text-[9px] font-mono text-slate-500">
                       {ch.sender === "user" ? `Trader (${ch.time})` : `EdgeCast Brain (${ch.time})`}
                     </div>
-                    <div 
+                    <div
                       className={`p-3 rounded-2xl max-w-[85%] text-xs font-sans leading-relaxed ${
                         ch.sender === "user"
                           ? "bg-indigo-600/30 border border-indigo-500/30 text-indigo-100 rounded-tr-none"
                           : "bg-zinc-900 border border-white/5 text-slate-200 rounded-tl-none"
                       }`}
                     >
-                      {ch.text}
+                      {formatMarketText(ch.text)}
                       {ch.model && (
                         <span className="block mt-1 text-[8px] font-mono text-slate-500 text-right">
                           model: {ch.model}
@@ -446,7 +575,7 @@ export default function App() {
                 <div className="text-[9px] font-mono uppercase tracking-[0.2em] text-slate-500">Match Minute</div>
                 <div className="relative">
                   <div className="text-5xl font-black font-mono tracking-wider bg-gradient-to-r from-amber-400 via-orange-500 to-pink-500 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                    {currentMinute.toFixed(1)}'
+                    {formatMatchClock(currentMinute)}
                   </div>
                   {isPlaying && (
                     <div className="absolute top-0 right-[-15px] w-2 h-2 rounded-full bg-emerald-500 animate-ping"></div>
@@ -499,7 +628,7 @@ export default function App() {
                       className="p-3 bg-white/[0.02] border border-white/5 rounded-xl flex gap-3 items-start transition-all hover:bg-white/[0.04]"
                     >
                       <span className="font-mono text-xs font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded shrink-0">
-                        {c.minute}'
+                        {formatCommentaryClock(c.minute, c.extra_time)}
                       </span>
                       <div className="flex flex-col gap-1 text-xs">
                         {c.team && (
@@ -544,17 +673,8 @@ export default function App() {
                       price: pInfo.price,
                       delta5m: pInfo.delta5m,
                       delta2m: pInfo.delta2m,
-                      // Quick mock questions to display nicely on sidebar
-                      question: mId === "1886051" ? `Winner: ${teams.home}` :
-                                mId === "1886054" ? "Match ends in Draw" :
-                                mId === "1886056" ? `Winner: ${teams.away}` :
-                                mId === "1887253" ? "Totals: Over 2.5 Goals" :
-                                mId === "1887262" ? "Both Teams to Score" :
-                                mId === "1886868" ? `${teams.away} HT Leader` :
-                                mId === "1886866" ? `${teams.home} HT Leader` :
-                                mId === "1886869" ? "Exact Score: 1-1" :
-                                mId === "1886871" ? "Exact Score: 2-1" :
-                                mId === "1886870" ? "Exact Score: 1-0" : `Market #${mId.substring(0,5)}...`
+                      label: pInfo.label || marketLabels[mId] || pInfo.question || `Market ${mId}`,
+                      type: pInfo.type,
                     }))
                     // Sort by absolute delta5m descending
                     .sort((a, b) => Math.abs(b.delta5m) - Math.abs(a.delta5m))
@@ -571,7 +691,7 @@ export default function App() {
                         >
                           <div className="flex justify-between items-start gap-2">
                             <span className="text-[11px] font-sans font-medium text-slate-300 leading-normal line-clamp-2">
-                              {item.question}
+                              {item.label}
                             </span>
                             <span className="text-xs font-mono font-bold text-cyan-400 shrink-0">
                               {item.price}c
@@ -579,7 +699,9 @@ export default function App() {
                           </div>
 
                           <div className="flex justify-between items-center text-[9px] font-mono">
-                            <span className="text-slate-500">ID: {item.market_id}</span>
+                            <span className="text-slate-500 truncate max-w-[55%]">
+                              {item.type ? item.type.replace(/_/g, " ") : "market"}
+                            </span>
                             <div className="flex gap-2">
                               <span className={item.delta2m >= 0 ? "text-emerald-400" : "text-rose-400"}>
                                 2m: {item.delta2m >= 0 ? "+" : ""}{item.delta2m}c

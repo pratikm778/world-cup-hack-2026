@@ -2,8 +2,8 @@
 
   • GET  /market/{market_id}/window  → market_state_lookup
   • GET  /events_window              → events_commentary_lookup
-  • Background task: every TICK_SECONDS, builds a tick payload from
-    everything-new-since-last-tick + a 5-minute polymarket movers slice,
+  • Background task: every EDGECAST_TICK_GAME_MINUTES of match time, builds
+    a tick payload from the window since the last interval + polymarket movers,
     POSTs it to the RocketRide webhook so test.pipe fires.
 
 The agent uses tool_http_request (already wired in test.pipe) to hit the two
@@ -41,7 +41,8 @@ log = logging.getLogger("edgecast")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 MATCH_ID = os.environ.get("EDGECAST_MATCH_ID", "ars-man-2026-04-19")
-TICK_SECONDS = int(os.environ.get("EDGECAST_TICK_SECONDS", "60"))
+TICK_GAME_MINUTES = float(os.environ.get("EDGECAST_TICK_GAME_MINUTES", "5"))
+TICK_POLL_SECONDS = float(os.environ.get("EDGECAST_TICK_POLL_SECONDS", "1"))
 WEBHOOK_URL = os.environ.get(
     "EDGECAST_WEBHOOK_URL",
     "http://localhost:8080/api/pipelines/test.pipe/webhook",
@@ -68,6 +69,14 @@ if _fake:
 BROADCAST_HISTORY_MAX = int(os.environ.get("EDGECAST_BROADCAST_HISTORY", "10"))
 _broadcast_history: deque[dict[str, Any]] = deque(maxlen=BROADCAST_HISTORY_MAX)
 _seen_event_ids: set[str] = set()
+_last_tick_bucket: int = -1
+
+
+def game_tick_bucket(minute: float) -> int:
+    """Bucket index for match-minute ticks. -1 until the first interval completes."""
+    if minute < TICK_GAME_MINUTES:
+        return -1
+    return int(minute // TICK_GAME_MINUTES)
 
 
 def _extract_broadcast(body: Any) -> str:
@@ -123,21 +132,13 @@ def compute_top_movers(now_minute: float, lookback: float, k: int) -> list[dict[
     return rows[:k]
 
 
-def build_tick_payload(now: datetime, last_tick: datetime | None) -> dict[str, Any]:
+def build_tick_payload(now: datetime, lookback_min: float | None = None) -> dict[str, Any]:
     """The dict POSTed to the RocketRide webhook each tick.
 
-    Window semantics: lookback = max(LOOKBACK_MIN, match-time elapsed since
-    last_tick + 0.5min safety). In RUNNING mode at speed=10 with 60s ticks,
-    that match-time gap is 10min — wider than the 5-min default, so without
-    this expansion 5 match-minutes of events would be dropped between ticks.
-    In FIXED mode the clock does not advance, so LOOKBACK_MIN is used.
+    Window semantics: one game-time interval (default 5 match-minutes).
     """
     now_minute = current_match_minute()
-    lookback = LOOKBACK_MIN
-    if last_tick is not None and _replay["fixed_minute"] is None:
-        speed = float(os.environ.get("EDGECAST_REPLAY_SPEED", "10"))
-        elapsed_match_min = (now - last_tick).total_seconds() * speed / 60.0
-        lookback = max(LOOKBACK_MIN, elapsed_match_min + 0.5)
+    lookback = lookback_min if lookback_min is not None else max(LOOKBACK_MIN, TICK_GAME_MINUTES)
     since_minute = max(0.0, now_minute - lookback)
 
     ec = events_commentary_lookup(MATCH_ID, since_minute, now_minute, "both")
@@ -174,38 +175,48 @@ def build_tick_payload(now: datetime, last_tick: datetime | None) -> dict[str, A
     }
 
 
+async def _fire_tick(client: httpx.AsyncClient) -> None:
+    now = datetime.now(timezone.utc)
+    payload = build_tick_payload(now)
+    log.info(
+        "tick → minute=%.1f movers=%d events=%d commentary=%d",
+        payload["match_minute"],
+        len(payload["polymarket_top_movers"]),
+        len(payload["new_key_events"]),
+        len(payload["new_commentary"]),
+    )
+    r = await client.post(WEBHOOK_URL, json=payload)
+    log.info("webhook %s %s", r.status_code, r.text[:120] if r.text else "")
+    if r.status_code < 300 and r.text:
+        try:
+            broadcast_text = _extract_broadcast(r.json())
+        except (json.JSONDecodeError, ValueError):
+            broadcast_text = r.text.strip()
+        if broadcast_text:
+            top = payload["polymarket_top_movers"]
+            _broadcast_history.append({
+                "tick_ts": payload["tick_ts"],
+                "match_minute": payload["match_minute"],
+                "text": broadcast_text,
+                "top_market_id": top[0]["market_id"] if top else None,
+            })
+            log.info("broadcast captured (%d in history)", len(_broadcast_history))
+
+
 async def tick_loop() -> None:
-    last_tick: datetime | None = None
+    global _last_tick_bucket
     async with httpx.AsyncClient(timeout=10) as client:
         while True:
             try:
-                now = datetime.now(timezone.utc)
-                payload = build_tick_payload(now, last_tick)
-                log.info("tick → minute=%.1f movers=%d events=%d commentary=%d",
-                         payload["match_minute"], len(payload["polymarket_top_movers"]),
-                         len(payload["new_key_events"]), len(payload["new_commentary"]))
-                r = await client.post(WEBHOOK_URL, json=payload)
-                log.info("webhook %s %s", r.status_code, r.text[:120] if r.text else "")
-                if r.status_code < 300 and r.text:
-                    try:
-                        broadcast_text = _extract_broadcast(r.json())
-                    except (json.JSONDecodeError, ValueError):
-                        broadcast_text = r.text.strip()
-                    if broadcast_text:
-                        top = payload["polymarket_top_movers"]
-                        _broadcast_history.append({
-                            "tick_ts": payload["tick_ts"],
-                            "match_minute": payload["match_minute"],
-                            "text": broadcast_text,
-                            "top_market_id": top[0]["market_id"] if top else None,
-                        })
-                        log.info("broadcast captured (%d in history)", len(_broadcast_history))
-                last_tick = now
+                bucket = game_tick_bucket(current_match_minute())
+                if bucket > _last_tick_bucket:
+                    await _fire_tick(client)
+                    _last_tick_bucket = bucket
             except httpx.RequestError as e:
                 log.warning("tick post failed (will retry): %s", e)
             except Exception as e:
                 log.exception("tick build/post crashed: %s", e)
-            await asyncio.sleep(TICK_SECONDS)
+            await asyncio.sleep(TICK_POLL_SECONDS)
 
 
 @asynccontextmanager
@@ -213,7 +224,11 @@ async def lifespan(app: FastAPI):
     task: asyncio.Task | None = None
     if TICK_ENABLED:
         task = asyncio.create_task(tick_loop())
-        log.info("tick loop started (interval=%ss → %s)", TICK_SECONDS, WEBHOOK_URL)
+        log.info(
+            "tick loop started (every %.1f match-min → %s)",
+            TICK_GAME_MINUTES,
+            WEBHOOK_URL,
+        )
     else:
         log.info("tick loop disabled (EDGECAST_TICK_ENABLED=0)")
     try:
@@ -246,7 +261,8 @@ def health() -> dict[str, Any]:
         "speed": float(os.environ.get("EDGECAST_REPLAY_SPEED", "10")),
         "kickoff": kickoff(MATCH_ID).isoformat(),
         "tick_enabled": TICK_ENABLED,
-        "tick_seconds": TICK_SECONDS,
+        "tick_game_minutes": TICK_GAME_MINUTES,
+        "tick_poll_seconds": TICK_POLL_SECONDS,
     }
 
 
@@ -276,27 +292,34 @@ def events_window(
 
 def _reset_memory() -> None:
     """Clear cross-tick memory so a fresh replay does not see stale dedup state."""
+    global _last_tick_bucket
     _broadcast_history.clear()
     _seen_event_ids.clear()
+    _last_tick_bucket = -1
 
 
 @app.post("/replay/seek")
 def replay_seek(minute: float = Query(...)) -> dict[str, Any]:
     """Pin the current match-minute. Useful for tests & demos."""
+    global _last_tick_bucket
     _replay["fixed_minute"] = minute
     _replay["anchor_minute"] = None
     _replay["anchor_real"] = None
-    _reset_memory()
+    if minute <= 0:
+        _reset_memory()
+    else:
+        _last_tick_bucket = game_tick_bucket(minute)
     return {"now_minute": minute, "mode": "fixed"}
 
 
 @app.post("/replay/start")
 def replay_start(from_minute: float = Query(0.0)) -> dict[str, Any]:
     """Anchor `from_minute` to NOW; clock advances at EDGECAST_REPLAY_SPEED."""
+    global _last_tick_bucket
     _replay["anchor_minute"] = from_minute
     _replay["anchor_real"] = datetime.now(timezone.utc).timestamp()
     _replay["fixed_minute"] = None
-    _reset_memory()
+    _last_tick_bucket = game_tick_bucket(from_minute) - 1
     return {"anchored_minute": from_minute, "mode": "running"}
 
 

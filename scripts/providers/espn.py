@@ -73,6 +73,11 @@ class EspnProvider:
                 else None
             )
             event_type = (play.get("type") or {}).get("type")
+            text = raw.get("text", "")
+            # ESPN sometimes omits clock on the final summary line; minute 0 would
+            # leak the final score into kickoff replay windows.
+            if minute == 0 and re.search(r"\bmatch ends\b", text, re.I):
+                continue
             athletes = play.get("athletesInvolved") or []
             players = [a.get("displayName") for a in athletes if a.get("displayName")]
             team = (play.get("team") or {}).get("displayName")

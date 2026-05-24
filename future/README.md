@@ -86,7 +86,7 @@ Optional GMI Cloud LLM ranking:
 
 ```bash
 export GMI_API_KEY=...
-export GMI_MODEL=google/gemma-4-31b-it
+export GMI_MODEL=google/gemini-3.5-flash
 export GMI_VIA_ROCKETRIDE=1
 ```
 

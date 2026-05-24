@@ -44,7 +44,7 @@
       "config": {
         "profile": "custom",
         "custom": {
-          "model": "google/gemma-4-31b-it",
+          "model": "google/gemini-3.5-flash",
           "serverbase": "https://api.gmi-serving.com/v1",
           "apikey": "${ROCKETRIDE_GMI_API_KEY}",
           "modelTotalTokens": 16384

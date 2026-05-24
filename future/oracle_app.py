@@ -22,7 +22,7 @@ app = Flask(__name__)
 SEARCH_API_URL = os.environ.get("ROCKETRIDE_SEARCH_API", "http://127.0.0.1:5055/search")
 POLYMARKET_GAMMA_URL = os.environ.get("POLYMARKET_GAMMA_URL", "https://gamma-api.polymarket.com")
 GMI_CHAT_URL = os.environ.get("GMI_CHAT_URL", "https://api.gmi-serving.com/v1/chat/completions")
-GMI_MODEL = os.environ.get("GMI_MODEL", "google/gemma-4-31b-it")
+GMI_MODEL = os.environ.get("GMI_MODEL", "google/gemini-3.5-flash")
 GMI_VIA_ROCKETRIDE = os.environ.get("GMI_VIA_ROCKETRIDE", "1").strip().lower() not in {"0", "false", "no"}
 POLYMARKET_WEB_URL = os.environ.get("POLYMARKET_WEB_URL", "https://polymarket.com")
 

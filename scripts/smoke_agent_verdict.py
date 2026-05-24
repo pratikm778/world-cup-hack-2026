@@ -58,7 +58,7 @@ def main() -> None:
     import scripts.agent_io_server as srv
     srv._replay["fixed_minute"] = minute
     srv._reset_memory()
-    payload = srv.build_tick_payload(datetime.now(timezone.utc), None)
+    payload = srv.build_tick_payload(datetime.now(timezone.utc))
 
     instructions = load_instructions()
     system_prompt = "\n\n".join(instructions)

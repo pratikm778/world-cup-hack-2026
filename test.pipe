@@ -156,7 +156,7 @@
       "provider": "tool_exa_search",
       "name": "Exa Search",
       "config": {
-        "apikey": "",
+        "apikey": "${ROCKETRIDE_EXA_KEY}",
         "includeText": true,
         "numResults": 10,
         "searchType": "auto",

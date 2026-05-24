@@ -948,15 +948,5 @@
     "players": [],
     "team": null,
     "source": "espn"
-  },
-  {
-    "minute": 0,
-    "text": "Match ends, Manchester City 2, Arsenal 1.",
-    "ts_utc": null,
-    "extra_time": 0,
-    "raw_event_type": null,
-    "players": [],
-    "team": null,
-    "source": "espn"
   }
 ]
